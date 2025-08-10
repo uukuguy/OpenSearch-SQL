@@ -1,9 +1,11 @@
+import os
 import requests, time
 import dashscope
 import torch
 import json
 import re
 from runner.logger import Logger
+from loguru import logger
 from llm.prompts import prompts_fewshot_parse
 def model_chose(step,model="gpt-4 32K"):
     if model.startswith("gpt") or model.startswith("claude35_sonnet") or model.startswith("gemini"):
@@ -44,34 +46,43 @@ class req:
         return t + "#SELECT:" + s + "#values:" + v
 
 def request(url,model,messages,temperature,top_p,n,key,**k):
-    res = requests.post(
-                url=
-                url,
-                json={
-                    "model":
-                    model,
-                    "messages": [{
-                        "role": "system",
-                        "content":
-                        "You are an SQL expert, skilled in handling various SQL-related issues."
-                    }, {
-                        "role": "user",
-                        "content": messages
-                    }],
-                    "max_tokens":
-                    800,
-                    "temperature":
-                    temperature,
-                    "top_p":top_p,
-                    "n":n,
-                    **k
-                },
-                headers={
-                    "Authorization":
-                    key
-                }).json()
 
-    return res
+    headers={
+        "Content-Type": "application/json",
+        "Authorization":
+        f"Bearer {key}"}
+    logger.debug(f"Using OpenAI API URL: {url}")
+    logger.debug(f"headers: {headers}")
+
+    json_data={
+        "model":
+        model,
+        "messages": [{
+            "role": "system",
+            "content":
+            "You are an SQL expert, skilled in handling various SQL-related issues."
+        }, {
+            "role": "user",
+            "content": messages
+        }],
+        "max_tokens":
+        800,
+        "temperature":
+        temperature,
+        "top_p":top_p,
+        "n":n,
+        **k
+    }
+    response = requests.post(
+                url=url,
+                json=json_data,
+                headers=headers)
+        
+    logger.debug(f"Response from OpenAI: {response}")
+    return response.json()
+    # res=response.json()
+    # logger.debug(f"Response from OpenAI: {res}")
+    # return res
 
 class gpt_req(req):
 
@@ -79,26 +90,34 @@ class gpt_req(req):
         super().__init__(step,model)
 
     def get_ans(self, messages, temperature=0.0, top_p=None,n=1,single=True,**k):
+        url = os.getenv("OPENAI_BASE_URL") + "/chat/completions"
+        key = os.getenv("OPENAI_API_KEY")
+        logger.debug(f"Using OpenAI API URL: {url}")
         count = 0
         while count < 50:
             # print(messages) #保存prompt和答案
             try:
+            # if True:
                 res = request(
-                url=
-                "",
+                url=url,
                 model=self.model,
                 messages= messages,
                 temperature=temperature,
                 top_p=top_p,
-                n=n,key="",
+                n=n,key=key,
                     **k)
+                logger.debug(f"Response from OpenAI: {res}")
                 if n==1 and single:
                     response_clean = res["choices"][0]["message"]["content"]
                 else:
                     response_clean = res["choices"]
+                logger.debug(f"Response from OpenAI: {response_clean}")
                 # print(self.step)
                 if self.step!="prepare_train_queries":
                     self.log_record(messages, response_clean)  # 记录对话内容
+
+                # self.Cost += res["usage"]['prompt_tokens'] / 1000 * 0.042 + res["usage"]["completion_tokens"] / 1000 * 0.126
+
                 break
 
             except Exception as e:
@@ -107,8 +126,6 @@ class gpt_req(req):
                 # print(messages)
                 print(e, count, self.Cost,res)
 
-        self.Cost += res["usage"]['prompt_tokens'] / 1000 * 0.042 + res[
-            "usage"]["completion_tokens"] / 1000 * 0.126
         return response_clean
     
 

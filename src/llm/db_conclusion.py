@@ -1,5 +1,6 @@
 import pandas as pd
 import re, sqlite3, os, chardet
+from loguru import logger
 
 
 def find_foreign_keys_MYSQL_like(DATASET_JSON, db_name):
@@ -59,10 +60,17 @@ class db_agent:
 
     def get_allinfo(self,db_json_dir, db,sqllite_dir,db_dir,tables_info_dir, model):
         db_info, db_col = self.get_db_des(sqllite_dir,db_dir,model)
+        # logger.debug(f"Database info: {db_info}")
+        # logger.debug(f"Database columns: {db_col}")
         foreign_keys = find_foreign_keys_MYSQL_like(tables_info_dir, db)[0]
+        # logger.debug(f"Foreign keys: {foreign_keys}")
+        
         all_info = f"Database Management System: SQLite\n#Database name: {db}\n{db_info}\n#Forigen keys:\n{foreign_keys}\n"
+        # logger.debug(f"All info: {all_info}")
         prompt = self.db_conclusion(all_info)
+        # logger.debug(f"Prompt for LLM: {prompt}")
         db_all = self.chat_model.get_ans(prompt)
+        logger.debug(f"LLM response: {db_all}")
         all_info = f"{all_info}\n{db_all}\n"
 
         return all_info, db_col

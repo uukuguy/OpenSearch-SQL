@@ -7,6 +7,7 @@ from runner.database_manager import DatabaseManager
 from llm.model import model_chose
 import json
 from llm.prompts import *
+from loguru import logger
 
 
 @node_decorator(check_schema_status=False)
@@ -24,6 +25,7 @@ def extract_col_value(task: Any, execution_history: Dict[str, Any]) -> Dict[str,
         hint = "None"
     
 
+    logger.debug(f"Extracting column values for task: {task.question_id} with hint: {hint}.\n {execution_history=}")
     all_info = get_last_node_result(execution_history, "generate_db_schema")["db_list"]
     key_col_des_raw = get_des_ans(chat_model,
                                 db_check_prompts().extract_prompt,

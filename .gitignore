@@ -1,1 +1,6 @@
 **/__pycache__/
+results/
+Bird/db_schema.json
+Bird/dev
+Bird/dev_20240627/
+Bird/data_preprocess/
