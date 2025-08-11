@@ -283,7 +283,8 @@ def extract_foreign_keys(db_col_dic: Dict[str, Any], db_manager: DatabaseManager
                         to_col = fk[4]
                         foreign_keys.append(f"{table_name}.{from_col} -> {to_table}.{to_col}")
             except Exception as e:
-                logger.warning(f"Could not get foreign keys for table {table_name}: {e}")
+                # logger.warning(f"Could not get foreign keys for table {table_name}: {e}")
+                pass
         
         # If no foreign keys found, infer from column names
         if not foreign_keys:

@@ -68,9 +68,9 @@ Configure your API key in `run/run_main.sh`:
 ### Core Components
 
 1. **Pipeline Framework**: Built using LangGraph with a StateGraph workflow system
-   - **Pipeline Manager** (`src/pipeline/pipeline_manager.py`): Singleton pattern manager for pipeline configuration
-   - **Workflow Builder** (`src/pipeline/workflow_builder.py`): Constructs the processing graph with configurable nodes
-   - **Run Manager** (`src/runner/run_manager.py`): Orchestrates task execution with multiprocessing (3 workers)
+   - **Pipeline Manager** (`src_optimized/pipeline/pipeline_manager.py`): Singleton pattern manager for pipeline configuration
+   - **Workflow Builder** (`src_optimized/pipeline/workflow_builder.py`): Constructs the processing graph with configurable nodes
+   - **Run Manager** (`src_optimized/runner/run_manager.py`): Orchestrates task execution with multiprocessing support and data persistence
 
 2. **Processing Pipeline Nodes** (executed in sequence):
    - `generate_db_schema`: Database schema generation and processing
@@ -82,16 +82,21 @@ Configure your API key in `run/run_main.sh`:
    - `vote`: Voting mechanism for best SQL selection
    - `evaluation`: Result evaluation and scoring
 
-3. **LLM Integration** (`src/llm/`):
+3. **LLM Integration** (`src_optimized/llm/`):
    - **Model Abstraction** (`model.py`): Supports multiple LLM providers (OpenAI, Claude, Gemini, Dashscope)
    - **Prompt Management** (`prompts.py`, `all_prompt.py`): Centralized prompt templates
    - **Database Conclusion** (`db_conclusion.py`): Schema reasoning logic
 
-4. **Runner System** (`src/runner/`):
+4. **Runner System** (`src_optimized/runner/`):
    - **Database Manager** (`database_manager.py`): Database connection and query execution
    - **Task Management** (`task.py`): Individual task representation and execution
    - **Statistics Manager** (`statistics_manager.py`): Performance tracking and metrics
-   - **Logger** (`logger.py`): Conversation and execution logging
+   - **Logger** (`logger.py`): Enhanced logger with loguru integration and backward compatibility
+
+5. **Utilities** (`src_optimized/utils/`):
+   - **Loguru Configuration** (`loguru_config.py`): Unified logging system with structured output, rotation, and compression
+   - **Results Collector** (`results_collector.py`): Thread-safe data persistence maintaining dataset order
+   - **Configuration Helpers**: Performance optimization and caching utilities
 
 ### Configuration
 
@@ -127,19 +132,59 @@ Pipeline behavior is controlled through JSON configuration in `run/run_main.sh`:
 
 ### Important Paths and Configuration
 
-- **Results Directory**: `results/{data_mode}/{pipeline_nodes}/{dataset_name}/{timestamp}/`
-- **Log Directory**: `results/.../logs/`
+- **Results Directory**: `results/{dataset_name}/{YYYY-MM-DD_HH-MM-SS}/` (simplified 3-layer structure)
+- **Log Directory**: `results/.../logs/` with loguru structured logging
+- **Work Log**: `WORK_LOG.md` for session continuity and development history
 - **Configuration**: Pipeline setup is passed as JSON string in shell scripts
 - **API Keys**: Set in `run/run_main.sh` (AK variable for API authentication)
 - **Model Paths**: Update `bert_model_path` variable for local embeddings model
 
+### Current System Status
+
+- ✅ **Loguru Integration**: Complete migration from standard logging to loguru with structured output
+- ✅ **Data Persistence**: ResultsCollector with thread-safe operation and multiple output formats
+- ✅ **Multiprocessing Support**: Fixed pickle serialization issues for parallel task execution
+- ✅ **Test Set Compatibility**: Automatic handling of datasets with/without ground truth SQL
+- ✅ **Directory Simplification**: User-friendly 3-layer result structure
+
 ### Execution Flow
 
 1. Load dataset from preprocessed JSON files
-2. Initialize RunManager with configuration
+2. Initialize RunManager with configuration and ResultsCollector
 3. Create Task objects for each query (indexed by start/end parameters)
 4. Execute pipeline nodes sequentially via LangGraph workflow
 5. Generate candidate SQLs with beam search
 6. Apply alignment corrections to reduce hallucination
 7. Vote on best SQL candidate
-8. Evaluate results and save to results directory
+8. Evaluate results (with automatic test/dev set detection)
+9. Persist results in multiple formats (JSON, CSV) while maintaining dataset order
+10. Generate comprehensive logs and statistics
+
+## Work Log Requirements
+
+**IMPORTANT**: When working on this repository, always maintain the work log (`WORK_LOG.md`) to ensure session continuity. The work log should include:
+
+### Required Log Entries
+
+- **Session Date and Overview**: Brief summary of work performed
+- **Major Changes**: List of significant modifications with file paths
+- **System Status Updates**: Current functionality and known issues
+- **Configuration Changes**: Any updates to settings, paths, or parameters
+- **Testing Results**: Verification of new features and bug fixes
+- **Next Steps**: Suggestions for future development
+
+### Log Update Triggers
+
+- After completing major features or bug fixes
+- When modifying core system components
+- After testing and validation phases
+- Before ending development sessions
+- When encountering and resolving significant issues
+
+### Log Format Standards
+
+- Use clear section headers and bullet points
+- Include file paths for modified components
+- Document both successful implementations and known limitations
+- Provide context for technical decisions
+- Include relevant configuration examples
