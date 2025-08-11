@@ -58,7 +58,7 @@ class RunManager:
         for i, data in enumerate(dataset):
             if i < start:  # 跳过 start 之前的元素
                 continue
-            if i >= end:  # 如果超过 end，停止处理
+            if end > 0 and i >= end:  # 如果超过 end，停止处理
                 break
             if "question_id" not in data:
                 data = {"question_id": i, **data}

@@ -2,7 +2,7 @@
 data_mode='dev' # Options: 'dev', 'train' 
 db_root_path=Bird #root directory # UPDATE THIS WITH THE PATH TO THE TARGET DATASET
 start=0 #闭区间
-end=1  #开区间
+end=-1  #开区间，-1 全部
 pipeline_nodes='generate_db_schema+extract_col_value+extract_query_noun+column_retrieve_and_other_info+candidate_generate+align_correct+vote+evaluation'
 # pipeline_nodes='column_retrieve_and_other_info'
 # pipeline指当前工作流的节点组合
