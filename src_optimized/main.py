@@ -3,7 +3,7 @@ Main entry point for the standalone OpenSearch-SQL pipeline.
 """
 import argparse
 import json
-import logging
+from ..utils.loguru_config import get_logger
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +12,7 @@ from typing import Any, Dict, List
 from .runner import RunManager
 
 
+logger = get_logger(__name__)
 def load_dataset(data_path: str) -> List[Dict[str, Any]]:
     """
     Loads the dataset from the specified path.
@@ -27,7 +28,7 @@ def load_dataset(data_path: str) -> List[Dict[str, Any]]:
             dataset = json.load(file)
         return dataset
     except Exception as e:
-        logging.error(f"Error loading dataset from {data_path}: {e}")
+        logger.error(f"Error loading dataset from {data_path}: {e}")
         raise
 
 
@@ -73,7 +74,7 @@ def validate_args(args) -> bool:
     
     if errors:
         for error in errors:
-            logging.error(error)
+            logger.error(error)
         return False
     
     return True
@@ -81,22 +82,13 @@ def validate_args(args) -> bool:
 
 def setup_logging(log_level: str):
     """
-    Setup logging configuration.
+    Setup logging configuration using loguru.
     
     Args:
         log_level (str): Logging level.
     """
-    numeric_level = getattr(logging, log_level.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError(f'Invalid log level: {log_level}')
-    
-    logging.basicConfig(
-        level=numeric_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-        ]
-    )
+    from .utils.loguru_config import LoguruConfig
+    LoguruConfig.setup(log_level=log_level)
 
 
 def get_dataset_path(args) -> str:
@@ -152,38 +144,38 @@ def main(args):
     
     # Setup logging
     setup_logging(args.log_level)
-    logging.info("Starting OpenSearch-SQL pipeline execution")
+    logger.info("Starting OpenSearch-SQL pipeline execution")
     
     # Validate arguments
     if not validate_args(args):
-        logging.error("Argument validation failed")
+        logger.error("Argument validation failed")
         sys.exit(1)
     
     try:
         # Load dataset
         dataset_path = get_dataset_path(args)
-        logging.info(f"Loading dataset from: {dataset_path}")
+        logger.info(f"Loading dataset from: {dataset_path}")
         dataset = load_dataset(dataset_path)
-        logging.info(f"Loaded {len(dataset)} items from dataset")
+        logger.info(f"Loaded {len(dataset)} items from dataset")
         
         # Create and run the pipeline
         with RunManager(args) as run_manager:
-            logging.info("Initializing tasks...")
+            logger.info("Initializing tasks...")
             run_manager.initialize_tasks(args.start, args.end, dataset)
             
-            logging.info("Running tasks...")
+            logger.info("Running tasks...")
             run_manager.run_tasks()
             
             # Print execution summary
             summary = run_manager.get_execution_summary()
-            logging.info("Execution Summary:")
-            logging.info(f"  Total tasks: {summary['total_tasks']}")
-            logging.info(f"  Processed tasks: {summary['processed_tasks']}")
-            logging.info(f"  Completion rate: {summary['completion_rate']:.2%}")
-            logging.info(f"  Results saved to: {summary['result_directory']}")
+            logger.info("Execution Summary:")
+            logger.info(f"  Total tasks: {summary['total_tasks']}")
+            logger.info(f"  Processed tasks: {summary['processed_tasks']}")
+            logger.info(f"  Completion rate: {summary['completion_rate']:.2%}")
+            logger.info(f"  Results saved to: {summary['result_directory']}")
     
     except Exception as e:
-        logging.error(f"Pipeline execution failed: {e}")
+        logger.error(f"Pipeline execution failed: {e}")
         raise
 
 

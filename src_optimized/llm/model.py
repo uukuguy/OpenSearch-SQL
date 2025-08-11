@@ -6,12 +6,13 @@ import requests
 import time
 import json
 import re
-import logging
+from ..utils.loguru_config import get_logger
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional, Tuple, Union
 from ..core import Logger
 
 
+logger = get_logger(__name__)
 class LLMModelBase(ABC):
     """
     Abstract base class for LLM models.
@@ -61,7 +62,7 @@ class LLMModelBase(ABC):
             logger.log_conversation(prompt_text, "Human", self.step)
             logger.log_conversation(output, "AI", self.step)
         except Exception as e:
-            logging.warning(f"Failed to log conversation: {e}")
+            logger.warning(f"Failed to log conversation: {e}")
     
     def fewshot_parse(self, question: str, evidence: str, sql: str) -> str:
         """
@@ -180,7 +181,7 @@ class GPTModel(LLMModelBase):
                 res = request_api(url, self.model, messages, temperature, top_p, n, key, **kwargs)
                 
                 if 'error' in res:
-                    logging.error(f"OpenAI API error: {res['error']}")
+                    logger.error(f"OpenAI API error: {res['error']}")
                     if count == max_retries - 1:
                         raise Exception(f"OpenAI API error: {res['error']}")
                     time.sleep(2 ** count)
@@ -201,7 +202,7 @@ class GPTModel(LLMModelBase):
                     return results
                     
             except Exception as e:
-                logging.error(f"Error in GPT request (attempt {count + 1}): {e}")
+                logger.error(f"Error in GPT request (attempt {count + 1}): {e}")
                 count += 1
                 if count >= max_retries:
                     raise
@@ -239,7 +240,7 @@ class ClaudeModel(LLMModelBase):
                                 n: int, single: bool, **kwargs) -> Union[str, List[str]]:
         """Fallback to OpenAI format for now."""
         # This is a placeholder - in production use actual Claude API
-        logging.warning("Using OpenAI API format for Claude - update for production")
+        logger.warning("Using OpenAI API format for Claude - update for production")
         gpt_model = GPTModel(self.step, "gpt-4o")
         return gpt_model.get_ans(messages, temperature, top_p, n, single, **kwargs)
 
@@ -290,7 +291,7 @@ def model_chose(step: str, model: str = "gpt-4o") -> LLMModelBase:
         return MockModel(step, model)
     else:
         # Default to GPT
-        logging.warning(f"Unknown model {model}, defaulting to GPT-4o")
+        logger.warning(f"Unknown model {model}, defaulting to GPT-4o")
         return GPTModel(step, "gpt-4o")
 
 

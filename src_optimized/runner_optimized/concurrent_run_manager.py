@@ -6,7 +6,7 @@ Implements multiple execution strategies: multiprocessing, threading, and async.
 import os
 import json
 import time
-import logging
+from ..utils.loguru_config import get_logger
 import asyncio
 from pathlib import Path
 from typing import List, Dict, Any, Tuple, Optional
@@ -24,7 +24,7 @@ from ..pipeline import build_pipeline
 from ..services.model_pool import initialize_model_pool, model_pool_manager
 from ..services.embedding_service import get_embedding_service
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass

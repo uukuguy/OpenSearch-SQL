@@ -8,7 +8,6 @@ import argparse
 import json
 import os
 import sys
-import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
@@ -18,14 +17,11 @@ from .core import Task, DatabaseManager, Logger, PipelineManager, StatisticsMana
 from .pipeline import build_pipeline
 from .llm import ModelFactory
 from .utils import ConfigHelper, DataHelper
+from .utils.loguru_config import setup_logging, get_logger
 from .runner import RunManager
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Initialize logger
+logger = get_logger(__name__)
 
 
 def load_dataset(data_path: str) -> List[Dict[str, Any]]:
@@ -67,6 +63,10 @@ def main(args):
     Args:
         args: Command line arguments
     """
+    # Setup logging first
+    setup_logging(log_level=getattr(args, 'log_level', 'INFO'))
+    logger = get_logger("main")
+    
     logger.info("=" * 60)
     logger.info("OpenSearch-SQL Standalone Pipeline")
     logger.info("=" * 60)
@@ -156,6 +156,13 @@ def main(args):
     
     # Generate SQL files
     run_manager.generate_sql_files()
+    
+    # Save final results in persistent format
+    saved_files = run_manager.save_final_results()
+    if saved_files:
+        logger.info("Results saved to:")
+        for format_name, file_path in saved_files.items():
+            logger.info(f"  {format_name}: {file_path}")
     
     # Print final statistics
     logger.info("=" * 60)
@@ -281,8 +288,7 @@ if __name__ == '__main__':
         elif not os.path.exists(args.checkpoint_dir):
             logger.warning(f'Checkpoint directory does not exist: {args.checkpoint_dir}')
     
-    # Set logging level
-    logging.getLogger().setLevel(getattr(logging, args.log_level))
+    # Set logging level (loguru is already configured via setup_logging)
     
     try:
         main(args)

@@ -3,7 +3,7 @@ Database schema generation node for OpenSearch-SQL pipeline.
 """
 import json
 import os
-import logging
+from ...utils.loguru_config import get_logger
 from pathlib import Path
 from typing import Any, Dict
 from sentence_transformers import SentenceTransformer
@@ -12,6 +12,8 @@ from ...core import DatabaseManager, PipelineManager, Logger
 from ...llm import model_chose
 from ..utils import node_decorator
 
+
+logger = get_logger(__name__)
 
 @node_decorator(check_schema_status=False)
 def generate_db_schema(task: Any, execution_history: Dict[str, Any]) -> Dict[str, Any]:
@@ -42,16 +44,16 @@ def generate_db_schema(task: Any, execution_history: Dict[str, Any]) -> Dict[str
             pool_manager = initialize_model_pool(bert_model_path, device=device, pool_size=2)
             bert_model_context = pool_manager.get_model(bert_model_path)
             
-            logging.info(f"Using BERT model from pool: {bert_model_path}")
+            logger.info(f"Using BERT model from pool: {bert_model_path}")
         except Exception as e:
-            logging.warning(f"Failed to initialize model pool {bert_model_path}: {e}")
+            logger.warning(f"Failed to initialize model pool {bert_model_path}: {e}")
             # Fallback: create model directly (not optimal but works)
             try:
                 bert_model_context = None
                 bert_model = SentenceTransformer(bert_model_path, device=device)
-                logging.info(f"Using direct BERT model: {bert_model_path}")
+                logger.info(f"Using direct BERT model: {bert_model_path}")
             except Exception as e2:
-                logging.warning(f"Failed to load BERT model directly: {e2}")
+                logger.warning(f"Failed to load BERT model directly: {e2}")
                 bert_model = None
                 bert_model_context = None
         
@@ -80,9 +82,9 @@ def generate_db_schema(task: Any, execution_history: Dict[str, Any]) -> Dict[str
         
         if existing_entry:
             all_info, db_col = existing_entry
-            logging.info(f"Using cached schema for database {db}")
+            logger.info(f"Using cached schema for database {db}")
         else:
-            logging.info(f"Generating schema for database {db}")
+            logger.info(f"Generating schema for database {db}")
             
             # Use model pool context manager if available
             if bert_model_context is not None:
@@ -101,7 +103,7 @@ def generate_db_schema(task: Any, execution_history: Dict[str, Any]) -> Dict[str
             data[db] = [all_info, db_col]
             with open(ext_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)
-            logging.info(f"Cached schema for database {db}")
+            logger.info(f"Cached schema for database {db}")
         
         response = {
             "db_list": all_info,
@@ -111,7 +113,7 @@ def generate_db_schema(task: Any, execution_history: Dict[str, Any]) -> Dict[str
         return response
         
     except Exception as e:
-        logging.error(f"Error in generate_db_schema: {e}")
+        logger.error(f"Error in generate_db_schema: {e}")
         # Return minimal schema information as fallback
         return {
             "db_list": f"Database: {task.db_id}",
@@ -152,7 +154,7 @@ def generate_database_info(db_id: str, db_json_dir: Path, tables_info_dir: Path,
         return all_info, db_col
         
     except Exception as e:
-        logging.error(f"Error generating database info for {db_id}: {e}")
+        logger.error(f"Error generating database info for {db_id}: {e}")
         # Return fallback information
         fallback_info = f"Database Management System: SQLite\nDatabase name: {db_id}\nSchema information unavailable."
         fallback_col = {}
@@ -190,7 +192,7 @@ def generate_database_description(db_id: str, schema: Dict[str, Any], chat_model
         return final_description
         
     except Exception as e:
-        logging.error(f"Error generating database description: {e}")
+        logger.error(f"Error generating database description: {e}")
         # Return basic schema information as fallback
         return format_schema_for_description(db_id, schema)
 
@@ -277,12 +279,12 @@ def generate_column_information(db_id: str, schema: Dict[str, Any],
                             sample_values = [row[col_index] for row in sample_data if row[col_index] is not None]
                             table_info["sample_values"][col_name] = sample_values[:3]  # Keep top 3 samples
                 except Exception as e:
-                    logging.warning(f"Could not get sample values for {table_name}.{col_name}: {e}")
+                    logger.warning(f"Could not get sample values for {table_name}.{col_name}: {e}")
             
             db_col[table_name] = table_info
         
         return db_col
         
     except Exception as e:
-        logging.error(f"Error generating column information: {e}")
+        logger.error(f"Error generating column information: {e}")
         return {}

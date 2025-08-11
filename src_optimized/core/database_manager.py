@@ -5,13 +5,14 @@ import os
 import sqlite3
 import pickle
 import random
-import logging
+from ..utils.loguru_config import get_logger
 from threading import Lock
 from pathlib import Path
 from typing import Callable, Dict, List, Any, Union
 from func_timeout import func_timeout, FunctionTimedOut
 
 
+logger = get_logger(__name__)
 class DatabaseManager:
     """
     A singleton class to manage database operations including schema generation, 
@@ -122,7 +123,7 @@ class DatabaseManager:
                 return "\n".join(schema_info)
                 
         except Exception as e:
-            logging.error(f"Error extracting schema: {e}")
+            logger.error(f"Error extracting schema: {e}")
             return f"Error: Could not extract schema from {db_path}"
     
     def _clean_sql(self, sql: str) -> str:
@@ -167,7 +168,7 @@ class DatabaseManager:
                 else:
                     raise ValueError("Invalid fetch argument. Must be 'all', 'one', 'random', or an integer.")
         except Exception as e:
-            logging.error(f"Error in execute_sql: {e}\nSQL: {sql}")
+            logger.error(f"Error in execute_sql: {e}\nSQL: {sql}")
             raise e
 
     def _compare_sqls_outcomes(self, predicted_sql: str, ground_truth_sql: str) -> int:
@@ -189,7 +190,7 @@ class DatabaseManager:
             ground_truth_res = self.execute_sql(ground_truth_sql)
             return int(set(predicted_res) == set(ground_truth_res))
         except Exception as e:
-            logging.critical(f"Error comparing SQL outcomes: {e}")
+            logger.critical(f"Error comparing SQL outcomes: {e}")
             raise e
 
     def compare_sqls(self, predicted_sql: str, ground_truth_sql: str, meta_time_out: int = 30) -> Dict[str, Union[int, str]]:
@@ -208,11 +209,11 @@ class DatabaseManager:
             res = func_timeout(meta_time_out, self._compare_sqls_outcomes, args=(predicted_sql, ground_truth_sql))
             error = "incorrect answer" if res == 0 else "--"
         except FunctionTimedOut:
-            logging.warning("Comparison timed out.")
+            logger.warning("Comparison timed out.")
             error = "timeout"
             res = 0
         except Exception as e:
-            logging.error(f"Error in compare_sqls: {e}")
+            logger.error(f"Error in compare_sqls: {e}")
             error = str(e)
             res = 0
         return {'exec_res': res, 'exec_err': error}
@@ -232,7 +233,7 @@ class DatabaseManager:
             result = self.execute_sql(sql, fetch=max_returned_rows)
             return {"SQL": sql, "RESULT": result, "STATUS": "OK"}
         except Exception as e:
-            logging.error(f"Error in validate_sql_query: {e}")
+            logger.error(f"Error in validate_sql_query: {e}")
             return {"SQL": sql, "RESULT": str(e), "STATUS": "ERROR"}
 
     def aggregate_sqls(self, sqls: List[str]) -> str:
@@ -265,7 +266,7 @@ class DatabaseManager:
             if largest_cluster:
                 return min(largest_cluster, key=len)
         
-        logging.warning("No valid SQL clusters found. Returning the first SQL query.")
+        logger.warning("No valid SQL clusters found. Returning the first SQL query.")
         return sqls[0] if sqls else ""
 
     def get_table_names(self) -> List[str]:
@@ -279,7 +280,7 @@ class DatabaseManager:
             result = self.execute_sql("SELECT name FROM sqlite_master WHERE type='table';")
             return [row[0] for row in result]
         except Exception as e:
-            logging.error(f"Error getting table names: {e}")
+            logger.error(f"Error getting table names: {e}")
             return []
 
     def get_table_schema(self, table_name: str) -> List[Dict[str, Any]]:
@@ -306,7 +307,7 @@ class DatabaseManager:
                 for row in result
             ]
         except Exception as e:
-            logging.error(f"Error getting table schema for {table_name}: {e}")
+            logger.error(f"Error getting table schema for {table_name}: {e}")
             return []
 
     def get_database_schema(self) -> Dict[str, List[Dict[str, Any]]]:
@@ -336,7 +337,7 @@ class DatabaseManager:
         try:
             return self.execute_sql(f"SELECT * FROM {table_name} LIMIT {limit};")
         except Exception as e:
-            logging.error(f"Error getting sample data from {table_name}: {e}")
+            logger.error(f"Error getting sample data from {table_name}: {e}")
             return []
 
     @staticmethod

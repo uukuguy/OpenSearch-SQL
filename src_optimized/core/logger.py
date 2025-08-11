@@ -1,11 +1,12 @@
 """
-Standalone Logger implementation for OpenSearch-SQL pipeline.
+Enhanced Logger implementation using loguru for OpenSearch-SQL pipeline.
 """
-import logging
 import json
 from threading import Lock
 from pathlib import Path
 from typing import Any, List, Dict, Union
+
+from ..utils.loguru_config import get_logger, LoguruConfig
 
 
 def make_serial(obj):
@@ -84,36 +85,37 @@ class Logger:
         self.db_id = db_id
         self.question_id = question_id
         self.result_directory = Path(result_directory)
+        self.logger = get_logger(f"pipeline.{db_id}.{question_id}")
 
     def _set_log_level(self, log_level: str):
         """
-        Sets the logging level.
+        Sets the logging level (now handled by loguru config).
 
         Args:
             log_level (str): The logging level to set.
-
-        Raises:
-            ValueError: If the log level is invalid.
         """
-        log_level_attr = getattr(logging, log_level.upper(), None)
-        if log_level_attr is None:
-            raise ValueError(f"Invalid log level: {log_level}")
-        logging.basicConfig(level=log_level_attr, format='%(levelname)s: %(message)s')
+        # Log level is now handled by loguru configuration
+        pass
 
     def log(self, message: str, log_level: str = "info"):
         """
-        Logs a message at the specified log level.
+        Logs a message at the specified log level using loguru.
 
         Args:
             message (str): The message to log.
             log_level (str): The log level to use.
-
-        Raises:
-            ValueError: If the log level is invalid.
         """
-        log_method = getattr(logging, log_level, None)
-        if log_method is None:
-            raise ValueError(f"Invalid log level: {log_level}")
+        # Map level to loguru methods
+        level_map = {
+            "debug": self.logger.debug,
+            "info": self.logger.info,
+            "warning": self.logger.warning,
+            "warn": self.logger.warning,
+            "error": self.logger.error,
+            "critical": self.logger.critical
+        }
+        
+        log_method = level_map.get(log_level.lower(), self.logger.info)
         log_method(message)
 
     def log_conversation(self, text: Union[str, List[Any], Dict[str, Any], bool], _from: str, step: str):
@@ -193,6 +195,27 @@ class Logger:
             message (str): Warning message.
         """
         self.log(message, "warning")
+
+    # Backward compatibility methods for standard logging interface
+    def info(self, message: str):
+        """Standard logging interface - info level."""
+        self.log(message, "info")
+    
+    def debug(self, message: str):
+        """Standard logging interface - debug level."""
+        self.log(message, "debug")
+    
+    def warning(self, message: str):
+        """Standard logging interface - warning level."""
+        self.log(message, "warning")
+    
+    def error(self, message: str):
+        """Standard logging interface - error level."""
+        self.log(message, "error")
+    
+    def critical(self, message: str):
+        """Standard logging interface - critical level."""
+        self.log(message, "critical")
 
     def __str__(self) -> str:
         """String representation of the Logger."""

@@ -3,7 +3,7 @@ Optimized column retrieval pipeline node using embedding service.
 Demonstrates how to integrate the new architecture.
 """
 
-import logging
+from ..utils.loguru_config import get_logger
 import json
 from typing import Any, Dict, List
 from pathlib import Path
@@ -26,7 +26,7 @@ from database_process.make_emb import load_emb
 from ..services.embedding_service import get_embedding_service
 from ..services.model_pool import initialize_model_pool
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class OptimizedDES:

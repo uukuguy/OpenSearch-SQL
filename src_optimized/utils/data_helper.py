@@ -2,11 +2,12 @@
 Data handling helper utilities for OpenSearch-SQL pipeline.
 """
 import json
-import logging
+from ..utils.loguru_config import get_logger
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
 
+logger = get_logger(__name__)
 class DataHelper:
     """
     Helper class for managing dataset loading and validation.
@@ -37,12 +38,12 @@ class DataHelper:
                     with open(data_path, 'r', encoding='utf-8') as f:
                         dataset = json.load(f)
                     
-                    logging.info(f"Loaded dataset from: {data_path}")
-                    logging.info(f"Dataset contains {len(dataset)} items")
+                    logger.info(f"Loaded dataset from: {data_path}")
+                    logger.info(f"Dataset contains {len(dataset)} items")
                     
                     return dataset
                 except Exception as e:
-                    logging.warning(f"Error loading from {data_path}: {e}")
+                    logger.warning(f"Error loading from {data_path}: {e}")
                     continue
         
         raise FileNotFoundError(f"Could not find dataset file in any of: {possible_paths}")
@@ -189,7 +190,7 @@ class DataHelper:
         if max_question_length is not None:
             filtered = [item for item in filtered if len(item.get("question", "")) <= max_question_length]
         
-        logging.info(f"Filtered dataset from {len(dataset)} to {len(filtered)} items")
+        logger.info(f"Filtered dataset from {len(dataset)} to {len(filtered)} items")
         return filtered
     
     @staticmethod
@@ -224,13 +225,13 @@ class DataHelper:
             db_existence[db_id] = exists
             
             if not exists:
-                logging.warning(f"Database file not found for {db_id}")
+                logger.warning(f"Database file not found for {db_id}")
         
         missing_count = sum(1 for exists in db_existence.values() if not exists)
         if missing_count > 0:
-            logging.warning(f"{missing_count} database files are missing")
+            logger.warning(f"{missing_count} database files are missing")
         else:
-            logging.info("All database files found")
+            logger.info("All database files found")
         
         return db_existence
 
@@ -253,11 +254,11 @@ def load_bird_dataset(data_root: str, data_mode: str = "dev",
     if validate:
         is_valid, issues = DataHelper.validate_dataset_structure(dataset)
         if not is_valid:
-            logging.warning(f"Dataset validation found {len(issues)} issues:")
+            logger.warning(f"Dataset validation found {len(issues)} issues:")
             for issue in issues[:5]:  # Show first 5 issues
-                logging.warning(f"  - {issue}")
+                logger.warning(f"  - {issue}")
             if len(issues) > 5:
-                logging.warning(f"  - ... and {len(issues) - 5} more issues")
+                logger.warning(f"  - ... and {len(issues) - 5} more issues")
     
     return dataset
 
@@ -278,9 +279,9 @@ def validate_dataset(dataset: List[Dict[str, Any]],
     is_valid, issues = DataHelper.validate_dataset_structure(dataset)
     
     if not is_valid:
-        logging.error("Dataset structure validation failed:")
+        logger.error("Dataset structure validation failed:")
         for issue in issues:
-            logging.error(f"  - {issue}")
+            logger.error(f"  - {issue}")
         return False
     
     # Validate database files if data_root provided
@@ -289,7 +290,7 @@ def validate_dataset(dataset: List[Dict[str, Any]],
         missing_dbs = [db_id for db_id, exists in db_existence.items() if not exists]
         
         if missing_dbs:
-            logging.error(f"Missing database files for: {missing_dbs}")
+            logger.error(f"Missing database files for: {missing_dbs}")
             return False
     
     return True
@@ -311,7 +312,7 @@ if __name__ == "__main__":
             print(json.dumps(stats, indent=2))
             
         except Exception as e:
-            logging.error(f"Error: {e}")
+            logger.error(f"Error: {e}")
     else:
         print("Usage: python data_helper.py <data_root> [data_mode]")
         print("Example: python data_helper.py ./Bird dev")

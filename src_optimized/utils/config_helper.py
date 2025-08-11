@@ -2,11 +2,12 @@
 Configuration helper utilities for OpenSearch-SQL pipeline.
 """
 import json
-import logging
+from ..utils.loguru_config import get_logger
 from pathlib import Path
 from typing import Dict, Any, Optional
 
 
+logger = get_logger(__name__)
 class ConfigHelper:
     """
     Helper class for managing configuration files and settings.
@@ -79,9 +80,9 @@ class ConfigHelper:
         try:
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=4, ensure_ascii=False)
-            logging.info(f"Configuration saved to: {config_path}")
+            logger.info(f"Configuration saved to: {config_path}")
         except Exception as e:
-            logging.error(f"Error saving configuration: {e}")
+            logger.error(f"Error saving configuration: {e}")
             raise
     
     @staticmethod
@@ -98,10 +99,10 @@ class ConfigHelper:
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
-            logging.info(f"Configuration loaded from: {config_path}")
+            logger.info(f"Configuration loaded from: {config_path}")
             return config
         except Exception as e:
-            logging.error(f"Error loading configuration: {e}")
+            logger.error(f"Error loading configuration: {e}")
             raise
     
     @staticmethod
@@ -150,12 +151,12 @@ class ConfigHelper:
         }
         
         if node_name not in required_fields:
-            logging.warning(f"Unknown node: {node_name}")
+            logger.warning(f"Unknown node: {node_name}")
             return True  # Allow unknown nodes
         
         for field in required_fields[node_name]:
             if field not in config:
-                logging.error(f"Missing required field '{field}' for node '{node_name}'")
+                logger.error(f"Missing required field '{field}' for node '{node_name}'")
                 return False
         
         return True
@@ -174,7 +175,7 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     if config_path and Path(config_path).exists():
         return ConfigHelper.load_config(config_path)
     else:
-        logging.info("Using default configuration")
+        logger.info("Using default configuration")
         return ConfigHelper.create_default_config()
 
 
@@ -218,7 +219,7 @@ def create_sample_config_file(output_path: str):
     }
     
     ConfigHelper.save_config(config, output_path)
-    logging.info(f"Sample configuration created at: {output_path}")
+    logger.info(f"Sample configuration created at: {output_path}")
 
 
 if __name__ == "__main__":

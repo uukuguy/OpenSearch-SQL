@@ -2,7 +2,7 @@
 SQL candidate generation node for OpenSearch-SQL pipeline.
 """
 import json
-import logging
+from ...utils.loguru_config import get_logger
 from typing import Any, Dict, List
 from pathlib import Path
 
@@ -10,6 +10,8 @@ from ...core import DatabaseManager, PipelineManager, Logger
 from ...llm import model_chose, get_sql_from_response
 from ..utils import node_decorator, get_last_node_result, make_newprompt
 
+
+logger = get_logger(__name__)
 
 @node_decorator(check_schema_status=False)
 def candidate_generate(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -34,7 +36,7 @@ def candidate_generate(task: Any, execution_history: List[Dict[str, Any]]) -> Di
             with open(fewshot_path, 'r', encoding='utf-8') as f:
                 df_fewshot = json.load(f)
         except Exception as e:
-            logging.warning(f"Could not load few-shot examples: {e}")
+            logger.warning(f"Could not load few-shot examples: {e}")
             df_fewshot = {"questions": {}}
         
         # Initialize chat model
@@ -44,7 +46,7 @@ def candidate_generate(task: Any, execution_history: List[Dict[str, Any]]) -> Di
         # Get information from previous nodes
         column_info_result = get_last_node_result(execution_history, "column_retrieve_and_other_info")
         if not column_info_result:
-            logging.error("No column information found in execution history")
+            logger.error("No column information found in execution history")
             return {"status": "error", "error": "Missing column information"}
         
         column = column_info_result.get("column", "")
@@ -104,11 +106,11 @@ def candidate_generate(task: Any, execution_history: List[Dict[str, Any]]) -> Di
             "candidate_count": len(sql_candidates) if isinstance(sql_candidates, list) else 1
         }
         
-        logging.info(f"Generated SQL candidates for task {task.db_id}_{task.question_id}")
+        logger.info(f"Generated SQL candidates for task {task.db_id}_{task.question_id}")
         return response
         
     except Exception as e:
-        logging.error(f"Error in candidate_generate: {e}")
+        logger.error(f"Error in candidate_generate: {e}")
         return {
             "SQL": "",
             "status": "error", 
@@ -169,10 +171,10 @@ def get_sql_from_response_wrapper(chat_model, prompt: str, temperature: float,
                 
         except Exception as e:
             retry_count += 1
-            logging.warning(f"Error getting SQL response (attempt {retry_count}): {e}")
+            logger.warning(f"Error getting SQL response (attempt {retry_count}): {e}")
             
             if retry_count >= max_retries:
-                logging.error(f"Failed to get SQL after {max_retries} attempts")
+                logger.error(f"Failed to get SQL after {max_retries} attempts")
                 return ("" if single else [], None)
             
             # Adjust parameters for retry
@@ -205,7 +207,7 @@ def validate_sql_candidates(sql_candidates, db_manager: DatabaseManager) -> List
             # Basic syntax validation
             sql = sql.strip()
             if not sql.upper().startswith('SELECT'):
-                logging.warning(f"SQL candidate {i} does not start with SELECT: {sql[:50]}...")
+                logger.warning(f"SQL candidate {i} does not start with SELECT: {sql[:50]}...")
                 continue
             
             # Try to execute the SQL (with LIMIT to prevent large results)
@@ -221,7 +223,7 @@ def validate_sql_candidates(sql_candidates, db_manager: DatabaseManager) -> List
             })
             
         except Exception as e:
-            logging.warning(f"Error validating SQL candidate {i}: {e}")
+            logger.warning(f"Error validating SQL candidate {i}: {e}")
             validated_candidates.append({
                 "sql": sql,
                 "index": i,

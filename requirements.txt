@@ -7,3 +7,4 @@ numpy
 chardet
 openai
 langgraph
+loguru

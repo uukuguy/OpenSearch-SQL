@@ -1,13 +1,15 @@
 """
 Alignment and correction node for OpenSearch-SQL pipeline.
 """
-import logging
+from ...utils.loguru_config import get_logger
 from typing import Any, Dict, List
 
 from ...core import DatabaseManager, PipelineManager, Logger
 from ...llm import model_chose
 from ..utils import node_decorator, get_last_node_result
 
+
+logger = get_logger(__name__)
 
 @node_decorator(check_schema_status=False)  
 def align_correct(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -28,14 +30,14 @@ def align_correct(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[st
         # Get SQL candidates from previous node
         candidate_result = get_last_node_result(execution_history, "candidate_generate")
         if not candidate_result:
-            logging.error("No SQL candidates found in execution history")
+            logger.error("No SQL candidates found in execution history")
             return {"status": "error", "error": "Missing SQL candidates"}
         
         sql_candidates = candidate_result.get("SQL", "")
         if isinstance(sql_candidates, str):
             sql_candidates = [sql_candidates]
         elif not sql_candidates:
-            logging.error("No valid SQL candidates to correct")
+            logger.error("No valid SQL candidates to correct")
             return {"status": "error", "error": "No SQL candidates to correct"}
         
         # Get database schema information
@@ -82,7 +84,7 @@ def align_correct(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[st
                         correction_history.extend(agent_corrections)
                     
                 except Exception as e:
-                    logging.warning(f"Error applying {method} to candidate {i}: {e}")
+                    logger.warning(f"Error applying {method} to candidate {i}: {e}")
             
             corrected_candidates.append({
                 "original_sql": sql_candidate,
@@ -111,11 +113,11 @@ def align_correct(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[st
                 "message": "No corrections could be applied"
             }
         
-        logging.info(f"Applied alignment corrections for task {task.db_id}_{task.question_id}")
+        logger.info(f"Applied alignment corrections for task {task.db_id}_{task.question_id}")
         return response
         
     except Exception as e:
-        logging.error(f"Error in align_correct: {e}")
+        logger.error(f"Error in align_correct: {e}")
         return {
             "SQL": "",
             "status": "error",
@@ -171,7 +173,7 @@ Return only the improved SQL query:
             return corrected_sql, corrections
         
     except Exception as e:
-        logging.warning(f"Style alignment failed: {e}")
+        logger.warning(f"Style alignment failed: {e}")
     
     return sql, corrections
 
@@ -225,7 +227,7 @@ Return only the corrected SQL query:
             return corrected_sql, corrections
         
     except Exception as e:
-        logging.warning(f"Function alignment failed: {e}")
+        logger.warning(f"Function alignment failed: {e}")
     
     return sql, corrections
 
@@ -279,7 +281,7 @@ Provide the final corrected SQL query:
             return corrected_sql, corrections
         
     except Exception as e:
-        logging.warning(f"Agent alignment failed: {e}")
+        logger.warning(f"Agent alignment failed: {e}")
     
     return sql, corrections
 
@@ -397,7 +399,7 @@ def validate_alignment_result(original_sql: str, corrected_sql: str,
         }
         
     except Exception as e:
-        logging.warning(f"Error validating alignment result: {e}")
+        logger.warning(f"Error validating alignment result: {e}")
         return {
             "original_valid": False,
             "corrected_valid": False,

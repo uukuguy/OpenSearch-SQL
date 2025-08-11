@@ -6,14 +6,14 @@ Implements singleton pattern with thread-safe model pool.
 import os
 import queue
 import threading
-import logging
+from ..utils.loguru_config import get_logger
 from typing import Optional, Dict, Any
 from contextlib import contextmanager
 from dataclasses import dataclass
 import torch
 from sentence_transformers import SentenceTransformer
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass

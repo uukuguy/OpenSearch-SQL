@@ -8,7 +8,7 @@ import argparse
 import json
 import os
 import sys
-import logging
+from ..utils.loguru_config import get_logger
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
@@ -22,11 +22,7 @@ from src_optimized.services.model_pool import initialize_model_pool
 from src_optimized.services.embedding_service import embedding_service_pool
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def load_dataset(data_path: str) -> List[Dict[str, Any]]:

@@ -2,7 +2,7 @@
 Column value extraction node for OpenSearch-SQL pipeline.
 """
 import json
-import logging
+from ...utils.loguru_config import get_logger
 import re
 from typing import Any, Dict, List, Tuple
 
@@ -10,6 +10,8 @@ from ...core import DatabaseManager, PipelineManager, Logger
 from ...llm import model_chose
 from ..utils import node_decorator, get_last_node_result
 
+
+logger = get_logger(__name__)
 
 @node_decorator(check_schema_status=False)
 def extract_col_value(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -31,7 +33,7 @@ def extract_col_value(task: Any, execution_history: List[Dict[str, Any]]) -> Dic
         # Get database schema from previous node
         schema_result = get_last_node_result(execution_history, "generate_db_schema")
         if not schema_result:
-            logging.error("No database schema found in execution history")
+            logger.error("No database schema found in execution history")
             return {"extracted_values": [], "status": "error", "error": "Missing database schema"}
         
         db_schema = schema_result.get("db_list", "")
@@ -74,11 +76,11 @@ def extract_col_value(task: Any, execution_history: List[Dict[str, Any]]) -> Dic
             }
         }
         
-        logging.info(f"Extracted {len(cleaned_values)} values for task {task.db_id}_{task.question_id}")
+        logger.info(f"Extracted {len(cleaned_values)} values for task {task.db_id}_{task.question_id}")
         return response
         
     except Exception as e:
-        logging.error(f"Error in extract_col_value: {e}")
+        logger.error(f"Error in extract_col_value: {e}")
         return {
             "extracted_values": [],
             "status": "error",
@@ -174,10 +176,10 @@ def extract_values_from_database_samples(question: str, evidence: str,
                 sample_values = table_info.get("sample_values", {})
             elif isinstance(table_info, list):
                 # If it's a list, skip sample value extraction for now
-                logging.debug(f"Skipping sample values for table {table_name} (list format)")
+                logger.debug(f"Skipping sample values for table {table_name} (list format)")
                 continue
             else:
-                logging.warning(f"Unexpected table_info format for {table_name}: {type(table_info)}")
+                logger.warning(f"Unexpected table_info format for {table_name}: {type(table_info)}")
                 continue
             
             for column_name, values in sample_values.items():
@@ -197,7 +199,7 @@ def extract_values_from_database_samples(question: str, evidence: str,
                                 })
     
     except Exception as e:
-        logging.warning(f"Error extracting values from database samples: {e}")
+        logger.warning(f"Error extracting values from database samples: {e}")
     
     return extracted_values
 
@@ -234,7 +236,7 @@ def extract_values_with_llm(question: str, evidence: str, db_schema: str,
         return extracted_values
         
     except Exception as e:
-        logging.warning(f"Error extracting values with LLM: {e}")
+        logger.warning(f"Error extracting values with LLM: {e}")
         return []
 
 
@@ -265,7 +267,7 @@ def parse_llm_value_response(response: str) -> List[Dict[str, Any]]:
             })
     
     except Exception as e:
-        logging.warning(f"Error parsing LLM value response: {e}")
+        logger.warning(f"Error parsing LLM value response: {e}")
     
     return extracted_values
 

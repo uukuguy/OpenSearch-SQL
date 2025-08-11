@@ -5,13 +5,13 @@ Supports in-memory LRU cache and optional Redis backend.
 
 import time
 import pickle
-import logging
+from ..utils.loguru_config import get_logger
 import threading
 from typing import Any, Optional, Dict
 from collections import OrderedDict
 from dataclasses import dataclass
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # Try to import Redis, but make it optional
 try:

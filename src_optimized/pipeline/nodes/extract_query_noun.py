@@ -1,7 +1,7 @@
 """
 Query noun extraction node for OpenSearch-SQL pipeline.
 """
-import logging
+from ...utils.loguru_config import get_logger
 import re
 from typing import Any, Dict, List
 
@@ -14,12 +14,14 @@ try:
     NLTK_AVAILABLE = True
 except ImportError:
     NLTK_AVAILABLE = False
-    logging.warning("NLTK not available, using basic text processing")
+    logger.warning("NLTK not available, using basic text processing")
 
 from ...core import DatabaseManager, PipelineManager, Logger
 from ...llm import model_chose
 from ..utils import node_decorator, get_last_node_result
 
+
+logger = get_logger(__name__)
 
 @node_decorator(check_schema_status=False)
 def extract_query_noun(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -53,7 +55,7 @@ def extract_query_noun(task: Any, execution_history: List[Dict[str, Any]]) -> Di
                 chat_model = model_chose(node_name, engine)
                 llm_entities = extract_entities_with_llm(task.question, task.evidence, chat_model)
             except Exception as e:
-                logging.warning(f"LLM extraction failed: {e}")
+                logger.warning(f"LLM extraction failed: {e}")
         
         # Combine and clean results
         all_entities = combine_and_rank_entities(pattern_nouns, nltk_entities, llm_entities)
@@ -66,11 +68,11 @@ def extract_query_noun(task: Any, execution_history: List[Dict[str, Any]]) -> Di
             "total_entities": len(all_entities)
         }
         
-        logging.info(f"Extracted {len(all_entities)} entities for task {task.db_id}_{task.question_id}")
+        logger.info(f"Extracted {len(all_entities)} entities for task {task.db_id}_{task.question_id}")
         return response
         
     except Exception as e:
-        logging.error(f"Error in extract_query_noun: {e}")
+        logger.error(f"Error in extract_query_noun: {e}")
         return {
             "extracted_nouns": [],
             "named_entities": [],
@@ -95,7 +97,7 @@ def ensure_nltk_data():
             try:
                 nltk.download(data, quiet=True)
             except Exception as e:
-                logging.warning(f"Could not download NLTK data {data}: {e}")
+                logger.warning(f"Could not download NLTK data {data}: {e}")
 
 
 def extract_nouns_by_pattern(question: str, evidence: str) -> List[Dict[str, Any]]:
@@ -148,7 +150,7 @@ def extract_nouns_by_pattern(question: str, evidence: str) -> List[Dict[str, Any
                 })
         
     except Exception as e:
-        logging.warning(f"Error in pattern-based noun extraction: {e}")
+        logger.warning(f"Error in pattern-based noun extraction: {e}")
     
     return extracted_nouns
 
@@ -192,7 +194,7 @@ def extract_entities_with_nltk(question: str, evidence: str) -> List[Dict[str, A
                 })
         
     except Exception as e:
-        logging.warning(f"Error in NLTK entity extraction: {e}")
+        logger.warning(f"Error in NLTK entity extraction: {e}")
     
     return entities
 
@@ -227,7 +229,7 @@ def extract_entities_with_llm(question: str, evidence: str, chat_model) -> List[
         return entities
         
     except Exception as e:
-        logging.warning(f"Error extracting entities with LLM: {e}")
+        logger.warning(f"Error extracting entities with LLM: {e}")
         return []
 
 
@@ -271,7 +273,7 @@ def parse_llm_noun_response(response: str) -> List[Dict[str, Any]]:
                     })
     
     except Exception as e:
-        logging.warning(f"Error parsing LLM noun response: {e}")
+        logger.warning(f"Error parsing LLM noun response: {e}")
     
     return entities
 

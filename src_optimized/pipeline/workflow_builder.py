@@ -1,7 +1,7 @@
 """
 Standalone WorkflowBuilder implementation for OpenSearch-SQL pipeline.
 """
-import logging
+from ..utils.loguru_config import get_logger
 from typing import Dict, TypedDict, Callable
 from langgraph.graph import END, StateGraph
 
@@ -17,6 +17,7 @@ from .nodes.evaluation import evaluation
 
 
 ### Graph State ###
+logger = get_logger(__name__)
 class GraphState(TypedDict):
     """
     Represents the state of our graph.
@@ -35,7 +36,7 @@ class WorkflowBuilder:
     def __init__(self):
         """Initialize the WorkflowBuilder."""
         self.workflow = StateGraph(GraphState)
-        logging.info("Initialized WorkflowBuilder")
+        logger.info("Initialized WorkflowBuilder")
 
     def build(self, pipeline_nodes: str) -> None:
         """
@@ -45,12 +46,12 @@ class WorkflowBuilder:
             pipeline_nodes (str): A string of pipeline node names separated by '+'.
         """
         nodes = pipeline_nodes.split("+")
-        logging.info(f"Building workflow with nodes: {nodes}")
+        logger.info(f"Building workflow with nodes: {nodes}")
         self._add_nodes(nodes)
         self.workflow.set_entry_point(nodes[0])
         self._add_edges([(nodes[i], nodes[i+1]) for i in range(len(nodes) - 1)])
         self._add_edges([(nodes[-1], END)])
-        logging.info("Workflow built successfully")
+        logger.info("Workflow built successfully")
 
     def _add_nodes(self, nodes: list) -> None:
         """
@@ -74,11 +75,11 @@ class WorkflowBuilder:
         for node_name in nodes:
             if node_name in node_functions:
                 self.workflow.add_node(node_name, node_functions[node_name])
-                logging.info(f"Added node: {node_name}")
+                logger.info(f"Added node: {node_name}")
             else:
-                logging.error(f"Node function '{node_name}' not found in node_functions mapping")
+                logger.error(f"Node function '{node_name}' not found in node_functions mapping")
                 available_nodes = list(node_functions.keys())
-                logging.error(f"Available nodes: {available_nodes}")
+                logger.error(f"Available nodes: {available_nodes}")
                 raise ValueError(f"Unknown node: {node_name}. Available nodes: {available_nodes}")
 
     def _add_edges(self, edges: list) -> None:
@@ -90,7 +91,7 @@ class WorkflowBuilder:
         """
         for src, dst in edges:
             self.workflow.add_edge(src, dst)
-            logging.info(f"Added edge from {src} to {dst}")
+            logger.info(f"Added edge from {src} to {dst}")
 
     def compile(self) -> Callable:
         """
@@ -101,10 +102,10 @@ class WorkflowBuilder:
         """
         try:
             app = self.workflow.compile()
-            logging.info("Workflow compiled successfully")
+            logger.info("Workflow compiled successfully")
             return app
         except Exception as e:
-            logging.error(f"Error compiling workflow: {e}")
+            logger.error(f"Error compiling workflow: {e}")
             raise
 
     def get_graph_visualization(self) -> str:
@@ -129,7 +130,7 @@ class WorkflowBuilder:
             
             return visualization
         except Exception as e:
-            logging.error(f"Error generating graph visualization: {e}")
+            logger.error(f"Error generating graph visualization: {e}")
             return f"Error generating visualization: {e}"
 
 
@@ -147,10 +148,10 @@ def build_pipeline(pipeline_nodes: str) -> Callable:
         builder = WorkflowBuilder()
         builder.build(pipeline_nodes)
         app = builder.compile()
-        logging.info("Pipeline built and compiled successfully")
+        logger.info("Pipeline built and compiled successfully")
         return app
     except Exception as e:
-        logging.error(f"Error building pipeline: {e}")
+        logger.error(f"Error building pipeline: {e}")
         raise
 
 def validate_pipeline_nodes(pipeline_nodes: str) -> bool:
@@ -178,8 +179,8 @@ def validate_pipeline_nodes(pipeline_nodes: str) -> bool:
     invalid_nodes = [node for node in nodes if node not in available_nodes]
     
     if invalid_nodes:
-        logging.error(f"Invalid pipeline nodes: {invalid_nodes}")
-        logging.error(f"Available nodes: {sorted(available_nodes)}")
+        logger.error(f"Invalid pipeline nodes: {invalid_nodes}")
+        logger.error(f"Available nodes: {sorted(available_nodes)}")
         return False
     
     return True

@@ -1,7 +1,7 @@
 """
 Voting node for OpenSearch-SQL pipeline.
 """
-import logging
+from ...utils.loguru_config import get_logger
 from typing import Any, Dict, List
 from collections import Counter
 
@@ -9,6 +9,8 @@ from ...core import DatabaseManager, PipelineManager, Logger
 from ...llm import model_chose
 from ..utils import node_decorator, get_last_node_result
 
+
+logger = get_logger(__name__)
 
 @node_decorator(check_schema_status=False)
 def vote(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -31,7 +33,7 @@ def vote(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, Any]:
         candidates = collect_sql_candidates(execution_history)
         
         if not candidates:
-            logging.error("No SQL candidates found for voting")
+            logger.error("No SQL candidates found for voting")
             return {"status": "error", "error": "No SQL candidates available for voting"}
         
         # Get voting method from config
@@ -63,11 +65,11 @@ def vote(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, Any]:
             "candidates": candidates
         }
         
-        logging.info(f"Voted SQL for task {task.db_id}_{task.question_id}: method={voting_method}")
+        logger.info(f"Voted SQL for task {task.db_id}_{task.question_id}: method={voting_method}")
         return response
         
     except Exception as e:
-        logging.error(f"Error in vote: {e}")
+        logger.error(f"Error in vote: {e}")
         return {
             "SQL": "",
             "status": "error",
@@ -365,7 +367,7 @@ Select the best candidate number (1, 2, 3, etc.) and briefly explain why:
         return selected_candidate["sql"], voting_info
         
     except Exception as e:
-        logging.warning(f"LLM voting failed: {e}")
+        logger.warning(f"LLM voting failed: {e}")
         # Fallback to simple voting
         return simple_voting(candidates)
 

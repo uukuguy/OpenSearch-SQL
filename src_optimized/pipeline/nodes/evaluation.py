@@ -1,13 +1,15 @@
 """
 Evaluation node for OpenSearch-SQL pipeline.
 """
-import logging
+from ...utils.loguru_config import get_logger
 from typing import Any, Dict, List
 
 from ...core import DatabaseManager, PipelineManager, Logger
 from ...llm import model_chose
 from ..utils import node_decorator, get_last_node_result
 
+
+logger = get_logger(__name__)
 
 @node_decorator(check_schema_status=False)
 def evaluation(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -29,12 +31,12 @@ def evaluation(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, 
         # Get the final SQL from voting node
         vote_result = get_last_node_result(execution_history, "vote")
         if not vote_result:
-            logging.error("No voting result found in execution history")
+            logger.error("No voting result found in execution history")
             return {"status": "error", "error": "Missing voting result"}
         
         predicted_sql = vote_result.get("SQL", "")
         if not predicted_sql or not predicted_sql.strip():
-            logging.error("No SQL query found in voting result")
+            logger.error("No SQL query found in voting result")
             return {"status": "error", "error": "No SQL query to evaluate"}
         
         # Get ground truth SQL if available
@@ -69,7 +71,7 @@ def evaluation(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, 
                 semantic_result = evaluate_semantics(predicted_sql, task, db_schema, chat_model)
                 results["semantic_evaluation"] = semantic_result
             except Exception as e:
-                logging.warning(f"LLM semantic evaluation failed: {e}")
+                logger.warning(f"LLM semantic evaluation failed: {e}")
                 results["semantic_evaluation"] = {"error": str(e)}
         
         # 4. Overall assessment
@@ -77,11 +79,11 @@ def evaluation(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, 
         results["overall_score"] = overall_score
         results["evaluation_summary"] = generate_evaluation_summary(results)
         
-        logging.info(f"Evaluated SQL for task {task.db_id}_{task.question_id}: score={overall_score}")
+        logger.info(f"Evaluated SQL for task {task.db_id}_{task.question_id}: score={overall_score}")
         return results
         
     except Exception as e:
-        logging.error(f"Error in evaluation: {e}")
+        logger.error(f"Error in evaluation: {e}")
         return {
             "status": "error",
             "error": str(e)
@@ -125,12 +127,12 @@ def evaluate_execution_match(predicted_sql: str, ground_truth_sql: str,
             result["ground_truth_result"] = ground_truth_result
             
         except Exception as e:
-            logging.warning(f"Could not get detailed execution results: {e}")
+            logger.warning(f"Could not get detailed execution results: {e}")
         
         return result
         
     except Exception as e:
-        logging.error(f"Error in execution evaluation: {e}")
+        logger.error(f"Error in execution evaluation: {e}")
         return {
             "exec_res": 0,
             "exec_err": str(e),
@@ -165,7 +167,7 @@ def evaluate_executability(predicted_sql: str, db_manager: DatabaseManager) -> D
         }
         
     except Exception as e:
-        logging.error(f"Error in executability evaluation: {e}")
+        logger.error(f"Error in executability evaluation: {e}")
         return {
             "exec_res": 0,
             "exec_err": str(e),
@@ -306,7 +308,7 @@ Explanation: [Brief explanation of the assessment]
         return semantic_result
         
     except Exception as e:
-        logging.warning(f"Semantic evaluation failed: {e}")
+        logger.warning(f"Semantic evaluation failed: {e}")
         return {"error": str(e)}
 
 

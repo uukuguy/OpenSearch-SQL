@@ -2,7 +2,7 @@
 Column retrieval and other information gathering node for OpenSearch-SQL pipeline.
 """
 import json
-import logging
+from ...utils.loguru_config import get_logger
 from typing import Any, Dict, List, Tuple
 from pathlib import Path
 
@@ -10,6 +10,8 @@ from ...core import DatabaseManager, PipelineManager, Logger
 from ...llm import model_chose
 from ..utils import node_decorator, get_last_node_result, safe_get_node_result
 
+
+logger = get_logger(__name__)
 
 @node_decorator(check_schema_status=False)
 def column_retrieve_and_other_info(task: Any, execution_history: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -34,7 +36,7 @@ def column_retrieve_and_other_info(task: Any, execution_history: List[Dict[str, 
         nouns_result = get_last_node_result(execution_history, "extract_query_noun")
         
         if not schema_result:
-            logging.error("No database schema found in execution history")
+            logger.error("No database schema found in execution history")
             return {"status": "error", "error": "Missing database schema"}
         
         db_list = schema_result.get("db_list", "")
@@ -68,11 +70,11 @@ def column_retrieve_and_other_info(task: Any, execution_history: List[Dict[str, 
             "column_count": len(relevant_columns)
         }
         
-        logging.info(f"Retrieved {len(relevant_columns)} relevant columns for task {task.db_id}_{task.question_id}")
+        logger.info(f"Retrieved {len(relevant_columns)} relevant columns for task {task.db_id}_{task.question_id}")
         return response
         
     except Exception as e:
-        logging.error(f"Error in column_retrieve_and_other_info: {e}")
+        logger.error(f"Error in column_retrieve_and_other_info: {e}")
         return {
             "column": "",
             "foreign_keys": "",
@@ -123,7 +125,7 @@ def retrieve_relevant_columns(question: str, evidence: str, db_col_dic: Dict[str
             # If table_info is a list, assume it's the columns list directly
             columns = table_info
         else:
-            logging.warning(f"Unexpected table_info format for {table_name}: {type(table_info)}")
+            logger.warning(f"Unexpected table_info format for {table_name}: {type(table_info)}")
             continue
         
         for column in columns:
@@ -144,7 +146,7 @@ def retrieve_relevant_columns(question: str, evidence: str, db_col_dic: Dict[str
                 col_name = column.lower()
                 col_type = "unknown"
             else:
-                logging.debug(f"Skipping unexpected column format: {type(column)}")
+                logger.debug(f"Skipping unexpected column format: {type(column)}")
                 continue
             
             # Calculate relevance score
@@ -281,14 +283,14 @@ def extract_foreign_keys(db_col_dic: Dict[str, Any], db_manager: DatabaseManager
                         to_col = fk[4]
                         foreign_keys.append(f"{table_name}.{from_col} -> {to_table}.{to_col}")
             except Exception as e:
-                logging.warning(f"Could not get foreign keys for table {table_name}: {e}")
+                logger.warning(f"Could not get foreign keys for table {table_name}: {e}")
         
         # If no foreign keys found, infer from column names
         if not foreign_keys:
             foreign_keys = infer_foreign_keys_from_names(db_col_dic)
     
     except Exception as e:
-        logging.warning(f"Error extracting foreign keys: {e}")
+        logger.warning(f"Error extracting foreign keys: {e}")
         return "No foreign key information available."
     
     if foreign_keys:

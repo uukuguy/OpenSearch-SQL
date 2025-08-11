@@ -3,12 +3,13 @@ Example usage of the standalone OpenSearch-SQL pipeline.
 """
 import json
 import os
-import logging
+from ..utils.loguru_config import get_logger
 from datetime import datetime
 
 # Set up basic logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Logging configured via logurus - %(levelname)s - %(message)s')
 
+logger = get_logger(__name__)
 def create_mock_args():
     """Create mock arguments for testing."""
     class MockArgs:
@@ -92,7 +93,7 @@ def example_basic_usage():
             
     except Exception as e:
         print(f"Error in basic usage example: {e}")
-        logging.error(f"Basic usage error: {e}", exc_info=True)
+        logger.error(f"Basic usage error: {e}", exc_info=True)
 
 
 def example_configuration_management():
@@ -134,7 +135,7 @@ def example_configuration_management():
             
     except Exception as e:
         print(f"Error in configuration example: {e}")
-        logging.error(f"Configuration error: {e}", exc_info=True)
+        logger.error(f"Configuration error: {e}", exc_info=True)
 
 
 def example_data_processing():
@@ -188,7 +189,7 @@ def example_data_processing():
         
     except Exception as e:
         print(f"Error in data processing example: {e}")
-        logging.error(f"Data processing error: {e}", exc_info=True)
+        logger.error(f"Data processing error: {e}", exc_info=True)
 
 
 def example_performance_monitoring():
@@ -221,7 +222,7 @@ def example_performance_monitoring():
         
     except Exception as e:
         print(f"Error in performance monitoring example: {e}")
-        logging.error(f"Performance monitoring error: {e}", exc_info=True)
+        logger.error(f"Performance monitoring error: {e}", exc_info=True)
 
 
 def run_all_examples():
@@ -247,7 +248,7 @@ def run_all_examples():
         
     except Exception as e:
         print(f"\n❌ Examples failed: {e}")
-        logging.error(f"Examples failed: {e}", exc_info=True)
+        logger.error(f"Examples failed: {e}", exc_info=True)
 
 
 if __name__ == "__main__":

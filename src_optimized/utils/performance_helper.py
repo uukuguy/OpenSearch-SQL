@@ -2,7 +2,7 @@
 Performance monitoring and profiling utilities for OpenSearch-SQL pipeline.
 """
 import time
-import logging
+from ..utils.loguru_config import get_logger
 import functools
 import psutil
 import os
@@ -10,6 +10,8 @@ from typing import Dict, Any, Callable, Optional
 from contextlib import contextmanager
 from dataclasses import dataclass
 
+
+logger = get_logger(__name__)
 
 @dataclass
 class PerformanceMetrics:
@@ -131,7 +133,7 @@ class PerformanceHelper:
             function_name (str): Name of the function.
             metrics (PerformanceMetrics): Performance metrics.
         """
-        logging.debug(
+        logger.debug(
             f"Performance - {function_name}: "
             f"time={metrics.execution_time:.2f}s, "
             f"memory={metrics.memory_usage_mb:.1f}MB, "
@@ -246,12 +248,12 @@ class PerformanceMonitor:
     def start_monitoring(self):
         """Start monitoring performance."""
         self.start_time = time.time()
-        logging.info("Performance monitoring started")
+        logger.info("Performance monitoring started")
     
     def stop_monitoring(self):
         """Stop monitoring performance."""
         self.end_time = time.time()
-        logging.info("Performance monitoring stopped")
+        logger.info("Performance monitoring stopped")
     
     def record_node_metrics(self, node_name: str, metrics: PerformanceMetrics):
         """
