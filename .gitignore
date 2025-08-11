@@ -5,3 +5,4 @@ Bird/dev
 Bird/dev_20240627/
 Bird/data_preprocess/
 Bird/emb/
+__pycache__
