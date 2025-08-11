@@ -39,7 +39,7 @@ def generate_db_schema(task: Any, execution_history: Dict[str, Any]) -> Dict[str
     # 检查是否已处理该数据库
     db = task.db_id
     existing_entry = data.get(db)
-    logger.debug(f"Checking existing entry for database {db}: {existing_entry}")
+    # logger.debug(f"Checking existing entry for database {db}: {existing_entry}")
 
     if existing_entry:
         all_info,db_col = existing_entry

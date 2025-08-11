@@ -51,8 +51,8 @@ def request(url,model,messages,temperature,top_p,n,key,**k):
         "Content-Type": "application/json",
         "Authorization":
         f"Bearer {key}"}
-    logger.debug(f"Using OpenAI API URL: {url}")
-    logger.debug(f"headers: {headers}")
+    # logger.debug(f"Using OpenAI API URL: {url}")
+    # logger.debug(f"headers: {headers}")
 
     json_data={
         "model":
@@ -78,7 +78,7 @@ def request(url,model,messages,temperature,top_p,n,key,**k):
                 json=json_data,
                 headers=headers)
         
-    logger.debug(f"Response from OpenAI: {response}")
+    # logger.debug(f"Response from OpenAI: {response}")
     return response.json()
     # res=response.json()
     # logger.debug(f"Response from OpenAI: {res}")
@@ -92,7 +92,7 @@ class gpt_req(req):
     def get_ans(self, messages, temperature=0.0, top_p=None,n=1,single=True,**k):
         url = os.getenv("OPENAI_BASE_URL") + "/chat/completions"
         key = os.getenv("OPENAI_API_KEY")
-        logger.debug(f"Using OpenAI API URL: {url}")
+        # logger.debug(f"Using OpenAI API URL: {url}")
         count = 0
         while count < 50:
             # print(messages) #保存prompt和答案
@@ -106,12 +106,12 @@ class gpt_req(req):
                 top_p=top_p,
                 n=n,key=key,
                     **k)
-                logger.debug(f"Response from OpenAI: {res}")
+                # logger.debug(f"Response from OpenAI: {res}")
                 if n==1 and single:
                     response_clean = res["choices"][0]["message"]["content"]
                 else:
                     response_clean = res["choices"]
-                logger.debug(f"Response from OpenAI: {response_clean}")
+                # logger.debug(f"Response from OpenAI: {response_clean}")
                 # print(self.step)
                 if self.step!="prepare_train_queries":
                     self.log_record(messages, response_clean)  # 记录对话内容
