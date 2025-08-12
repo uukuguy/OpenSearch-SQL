@@ -5,7 +5,7 @@ Supports in-memory LRU cache and optional Redis backend.
 
 import time
 import pickle
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 import threading
 from typing import Any, Optional, Dict
 from collections import OrderedDict

@@ -5,7 +5,7 @@ import os
 import sqlite3
 import pickle
 import random
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 from threading import Lock
 from pathlib import Path
 from typing import Callable, Dict, List, Any, Union

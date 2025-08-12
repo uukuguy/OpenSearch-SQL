@@ -3,7 +3,7 @@ Example usage of the standalone OpenSearch-SQL pipeline.
 """
 import json
 import os
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 from datetime import datetime
 
 # Set up basic logging

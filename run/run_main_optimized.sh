@@ -121,7 +121,7 @@ export OPENAI_API_KEY=$AK
 export OPENAI_BASE_URL=${OPENAI_BASE_URL:-"https://api.openai.com/v1"}
 
 # Build the command - use the standalone implementation
-CMD="python3 -m src_optimized.main_standalone"
+CMD="python3 -m opensearch_sql.main"
 CMD="$CMD --data_mode ${data_mode}"
 CMD="$CMD --db_root_path ${db_root_path}"
 CMD="$CMD --pipeline_nodes ${pipeline_nodes}"
@@ -159,7 +159,7 @@ echo "Command: $CMD"
 echo ""
 
 # Set Python path and run
-PYTHONPATH=$PWD/src:$PWD/src_optimized eval $CMD
+PYTHONPATH=$PWD/src:$PWD/opensearch_sql eval $CMD
 
 # Check exit status
 if [ $? -eq 0 ]; then

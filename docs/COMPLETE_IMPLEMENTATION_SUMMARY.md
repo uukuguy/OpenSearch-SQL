@@ -26,14 +26,14 @@ Total: 7/7 tests passed
 
 ## 🏗️ 实现架构
 
-### 1. **核心组件** (`src_optimized/core/`)
+### 1. **核心组件** (`opensearch_sql/core/`)
 - ✅ `Task` - 任务表示和管理
 - ✅ `DatabaseManager` - 数据库操作（包括 `get_db_schema` 方法）
 - ✅ `Logger` - 日志和对话记录
 - ✅ `PipelineManager` - Pipeline 配置管理
 - ✅ `StatisticsManager` - 统计和性能跟踪
 
-### 2. **Pipeline框架** (`src_optimized/pipeline/`)
+### 2. **Pipeline框架** (`opensearch_sql/pipeline/`)
 - ✅ `WorkflowBuilder` - 基于 LangGraph 的工作流构建
 - ✅ `utils` - Pipeline 工具和装饰器
 - ✅ **全部8个节点实现**:
@@ -46,23 +46,23 @@ Total: 7/7 tests passed
   7. `vote` - 投票机制
   8. `evaluation` - 结果评估
 
-### 3. **LLM集成** (`src_optimized/llm/`)
+### 3. **LLM集成** (`opensearch_sql/llm/`)
 - ✅ `ModelFactory` - 模型工厂类
 - ✅ `LLMModelBase` - 模型基类
 - ✅ 多模型支持（GPT、Claude、Mock）
 - ✅ `PromptManager` - 提示管理
 
-### 4. **优化组件** (`src_optimized/services/`)
+### 4. **优化组件** (`opensearch_sql/services/`)
 - ✅ `ModelPool` - 模型池管理
 - ✅ `EmbeddingService` - Embedding服务与缓存
 - ✅ `CacheManager` - 多级缓存（L1内存 + L2 Redis）
 
-### 5. **运行管理** (`src_optimized/runner_optimized/`)
+### 5. **运行管理** (`opensearch_sql/runner_optimized/`)
 - ✅ `ConcurrentRunManager` - 并发任务执行
 - ✅ 多种执行模式（串行、线程、多进程、异步）
 - ✅ 性能监控和进度跟踪
 
-### 6. **工具集** (`src_optimized/utils/`)
+### 6. **工具集** (`opensearch_sql/utils/`)
 - ✅ `ConfigHelper` - 配置管理
 - ✅ `DataHelper` - 数据加载和验证
 - ✅ `PerformanceMonitor` - 性能监控
@@ -76,7 +76,7 @@ Total: 7/7 tests passed
 bash run/run_main_optimized.sh
 
 # 或直接运行Python
-python -m src_optimized.main \
+python -m opensearch_sql.main \
     --data_mode dev \
     --db_root_path Bird \
     --pipeline_nodes "all_nodes" \
@@ -88,9 +88,9 @@ python -m src_optimized.main \
 
 ```python
 # 导入独立实现的组件
-from src_optimized.core import Task, DatabaseManager
-from src_optimized.runner_optimized import ConcurrentRunManager
-from src_optimized.services import initialize_model_pool
+from opensearch_sql.core import Task, DatabaseManager
+from opensearch_sql.runner_optimized import ConcurrentRunManager
+from opensearch_sql.services import initialize_model_pool
 
 # 初始化模型池
 initialize_model_pool("BAAI/bge-m3", pool_size=3)
@@ -131,7 +131,7 @@ manager.run_tasks()
 ```
 OpenSearch-SQL/
 ├── src/                           # 原始实现（未修改）
-├── src_optimized/                 # 完全独立的优化实现
+├── opensearch_sql/                 # 完全独立的优化实现
 │   ├── core/                      # 核心组件
 │   ├── pipeline/                  # Pipeline框架和节点
 │   ├── llm/                       # LLM集成

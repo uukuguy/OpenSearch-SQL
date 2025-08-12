@@ -187,15 +187,15 @@ def parse_arguments():
         epilog="""
 Examples:
   # Run with basic settings
-  python -m src_optimized.main_standalone --data_mode dev --db_root_path Bird
+  python -m opensearch_sql.main --data_mode dev --db_root_path Bird
   
   # Run with custom pipeline
-  python -m src_optimized.main_standalone --data_mode dev --db_root_path Bird \\
+  python -m opensearch_sql.main --data_mode dev --db_root_path Bird \\
     --pipeline_nodes "candidate_generate+vote+evaluation" \\
     --pipeline_setup '{"candidate_generate": {"engine": "mock", "n": 1}}'
     
   # High-performance mode
-  python -m src_optimized.main_standalone --data_mode dev --db_root_path Bird \\
+  python -m opensearch_sql.main --data_mode dev --db_root_path Bird \\
     --num_workers 6 --pool_size 4 --enable_redis true
         """
     )

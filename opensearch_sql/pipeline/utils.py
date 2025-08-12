@@ -3,7 +3,7 @@ Utility functions for OpenSearch-SQL pipeline nodes.
 """
 from functools import wraps
 from typing import Dict, List, Any, Callable
-from ..core import Logger, DatabaseManager
+from opensearch_sql.core import Logger, DatabaseManager
 
 
 def node_decorator(check_schema_status: bool = False) -> Callable:

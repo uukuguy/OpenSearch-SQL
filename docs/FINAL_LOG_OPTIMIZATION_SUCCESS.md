@@ -92,7 +92,7 @@ INFO | vote: 投票选择最佳SQL...
 
 ### 3. 配置传递链
 ```
-main_standalone.py 
+main.py 
   → setup_logging(verbose=args.verbose)
   → LoguruConfig.setup(verbose=verbose) 
   → 智能控制台过滤器

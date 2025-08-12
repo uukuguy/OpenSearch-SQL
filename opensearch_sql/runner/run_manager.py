@@ -3,17 +3,17 @@ Standalone RunManager implementation for OpenSearch-SQL pipeline.
 """
 import os
 import json
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 from pathlib import Path
 from multiprocessing import Pool
 from typing import List, Dict, Any, Tuple
 from datetime import datetime
 
-from ..core import Task, Logger, DatabaseManager, StatisticsManager, PipelineManager
-from ..pipeline import build_pipeline, validate_pipeline_nodes
-from ..utils.results_collector import ResultsCollector
-from ..utils.progress_tracker import ProgressTracker, SQLFormatter, ErrorFilter
-from ..utils.task_result_formatter import TaskResultLogger
+from opensearch_sql.core import Task, Logger, DatabaseManager, StatisticsManager, PipelineManager
+from opensearch_sql.pipeline import build_pipeline, validate_pipeline_nodes
+from opensearch_sql.utils.results_collector import ResultsCollector
+from opensearch_sql.utils.progress_tracker import ProgressTracker, SQLFormatter, ErrorFilter
+from opensearch_sql.utils.task_result_formatter import TaskResultLogger
 
 
 # Default values - will be overridden by args
@@ -221,9 +221,9 @@ class RunManager:
         # Import here to avoid issues with multiprocessing
         import json
         from datetime import datetime
-        from ..core import Task, Logger, DatabaseManager, PipelineManager
-        from ..pipeline import build_pipeline, validate_pipeline_nodes
-        from ..utils.loguru_config import get_logger
+        from opensearch_sql.core import Task, Logger, DatabaseManager, PipelineManager
+        from opensearch_sql.pipeline import build_pipeline, validate_pipeline_nodes
+        from opensearch_sql.utils.loguru_config import get_logger
         
         worker_logger = get_logger(__name__)
         

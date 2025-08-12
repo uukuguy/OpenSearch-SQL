@@ -148,7 +148,7 @@ pipeline_setup='{
 }'
 
 # Run with specified execution mode
-python3 ./src_optimized/main_optimized.py \
+python3 ./opensearch_sql/main_optimized.py \
     --data_mode ${data_mode} \
     --db_root_path ${db_root_path} \
     --pipeline_nodes ${pipeline_nodes} \

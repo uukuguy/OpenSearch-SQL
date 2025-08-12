@@ -12,7 +12,7 @@
 ## 解决方案
 
 ### 1. 修复 RunManager 集成
-在 `src_optimized/runner/run_manager.py` 中：
+在 `opensearch_sql/runner/run_manager.py` 中：
 
 - ✅ **初始化 ProgressTracker**: 在 `initialize_tasks()` 方法中正确初始化增强的进度跟踪器
 - ✅ **替换 plot_progress()**: 将老式进度条替换为增强的 `progress_tracker.update()` 调用
@@ -58,7 +58,7 @@ Progress: [███████████████████████
 
 ## 主要修改文件
 
-1. **`src_optimized/runner/run_manager.py`**:
+1. **`opensearch_sql/runner/run_manager.py`**:
    - 初始化 ProgressTracker 实例
    - 替换 plot_progress() 调用
    - 传递详细任务信息给进度跟踪器

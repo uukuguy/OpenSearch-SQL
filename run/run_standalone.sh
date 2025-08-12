@@ -50,7 +50,7 @@ echo ""
 echo -e "${GREEN}Starting fully standalone pipeline...${NC}"
 
 # Run the standalone implementation
-python -m src_optimized.main_standalone \
+python -m opensearch_sql.main \
     --data_mode "$data_mode" \
     --db_root_path "$db_root_path" \
     --pipeline_nodes "$pipeline_nodes" \

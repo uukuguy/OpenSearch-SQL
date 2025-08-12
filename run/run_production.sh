@@ -152,7 +152,7 @@ echo "✅ Production-ready configuration"
 echo ""
 
 # Run the production pipeline with optimization settings
-python -m src_optimized.main_standalone \
+python -m opensearch_sql.main \
     --data_mode "$data_mode" \
     --db_root_path "$db_root_path" \
     --pipeline_nodes "$pipeline_nodes" \

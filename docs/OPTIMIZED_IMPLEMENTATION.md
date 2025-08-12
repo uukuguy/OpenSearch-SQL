@@ -28,7 +28,7 @@ OpenSearch-SQL/
 │   ├── run_main_optimized.sh    # 优化入口（新增）
 │   └── compare_performance.sh   # 性能对比脚本（新增）
 ├── src/                         # 原始实现
-└── src_optimized/               # 优化实现（新增）
+└── opensearch_sql/               # 优化实现（新增）
     ├── main_optimized.py        # 主入口程序
     ├── services/                # 核心服务
     │   ├── model_pool.py       # 模型池管理
@@ -122,7 +122,7 @@ export OPENAI_BASE_URL=https://api.openai.com/v1
 ### 命令行参数
 
 ```bash
-python3 src_optimized/main_optimized.py \
+python3 opensearch_sql/main_optimized.py \
     --data_mode dev \
     --db_root_path Bird \
     --pipeline_nodes "node1+node2+..." \
@@ -221,7 +221,7 @@ LOG_LEVEL=ERROR bash run/run_main_optimized.sh
 
 ```bash
 # 启用性能分析
-python3 src_optimized/main_optimized.py \
+python3 opensearch_sql/main_optimized.py \
     --enable_profiling \
     --save_stats \
     ...其他参数
@@ -286,7 +286,7 @@ python3 src_optimized/main_optimized.py \
 3. **自定义节点迁移**:
    ```python
    # 如果有自定义节点，可以逐步迁移
-   from src_optimized.services import get_embedding_service
+   from opensearch_sql.services import get_embedding_service
    
    # 在自定义节点中使用优化服务
    service = get_embedding_service(model_name)
@@ -298,7 +298,7 @@ python3 src_optimized/main_optimized.py \
 ### 添加新的优化节点
 
 ```python
-# src_optimized/pipeline_optimized/my_node_optimized.py
+# opensearch_sql/pipeline_optimized/my_node_optimized.py
 from ..services import get_embedding_service
 
 @node_decorator(check_schema_status=False)

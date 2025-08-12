@@ -68,9 +68,9 @@ Configure your API key in `run/run_main.sh`:
 ### Core Components
 
 1. **Pipeline Framework**: Built using LangGraph with a StateGraph workflow system
-   - **Pipeline Manager** (`src_optimized/pipeline/pipeline_manager.py`): Singleton pattern manager for pipeline configuration
-   - **Workflow Builder** (`src_optimized/pipeline/workflow_builder.py`): Constructs the processing graph with configurable nodes
-   - **Run Manager** (`src_optimized/runner/run_manager.py`): Orchestrates task execution with multiprocessing support and data persistence
+   - **Pipeline Manager** (`opensearch_sql/pipeline/pipeline_manager.py`): Singleton pattern manager for pipeline configuration
+   - **Workflow Builder** (`opensearch_sql/pipeline/workflow_builder.py`): Constructs the processing graph with configurable nodes
+   - **Run Manager** (`opensearch_sql/runner/run_manager.py`): Orchestrates task execution with multiprocessing support and data persistence
 
 2. **Processing Pipeline Nodes** (executed in sequence):
    - `generate_db_schema`: Database schema generation and processing
@@ -82,16 +82,16 @@ Configure your API key in `run/run_main.sh`:
    - `vote`: Voting mechanism for best SQL selection
    - `evaluation`: Result evaluation and scoring
 
-3. **LLM Integration** (`src_optimized/llm/`):
+3. **LLM Integration** (`opensearch_sql/llm/`):
    - **Model Abstraction** (`model.py`): Supports multiple LLM providers (OpenAI, Claude, Gemini, Dashscope)
    - **Prompt Management** (`prompts.py`): Centralized prompt templates
 
-4. **Runner System** (`src_optimized/runner/`):
+4. **Runner System** (`opensearch_sql/runner/`):
    - **Database Manager** (`database_manager.py`): Database connection and query execution
    - **Task Management** (`task.py`): Individual task representation and execution
    - **Statistics Manager** (`statistics_manager.py`): Performance tracking and metrics
 
-5. **Utilities** (`src_optimized/utils/`):
+5. **Utilities** (`opensearch_sql/utils/`):
    - **Loguru Configuration** (`loguru_config.py`): Unified logging system with structured output, rotation, and compression
    - **Results Collector** (`results_collector.py`): Thread-safe data persistence maintaining dataset order
    - **Progress Tracker** (`progress_tracker.py`): Enhanced progress display with ETA and accuracy tracking

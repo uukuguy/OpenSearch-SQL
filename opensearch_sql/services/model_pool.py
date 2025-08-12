@@ -6,7 +6,7 @@ Implements singleton pattern with thread-safe model pool.
 import os
 import queue
 import threading
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 from typing import Optional, Dict, Any
 from contextlib import contextmanager
 from dataclasses import dataclass

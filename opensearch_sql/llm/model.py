@@ -6,10 +6,10 @@ import requests
 import time
 import json
 import re
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional, Tuple, Union
-from ..core import Logger
+from opensearch_sql.core import Logger
 
 
 logger = get_logger(__name__)

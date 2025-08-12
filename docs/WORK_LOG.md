@@ -36,7 +36,7 @@ OpenSearch-SQL是一个Text-to-SQL框架，在BIRD基准测试中获得第一名
 **技术实现**:
 - 修改`TaskResultFormatter`确保任务结果始终详细显示
 - 更新`LoguruConfig`支持verbose模式的管道日志过滤
-- 在`main_standalone.py`中传递verbose参数到日志配置
+- 在`main.py`中传递verbose参数到日志配置
 - 创建智能控制台过滤器，基于模块名和消息内容过滤
 
 **测试验证**:
@@ -45,9 +45,9 @@ OpenSearch-SQL是一个Text-to-SQL框架，在BIRD基准测试中获得第一名
 - 确认管道日志可控制：默认简洁，verbose详细
 
 **文件变更**:
-- `src_optimized/utils/task_result_formatter.py` - 移除verbose控制
-- `src_optimized/utils/loguru_config.py` - 添加verbose参数支持
-- `src_optimized/main_standalone.py` - 传递verbose参数
+- `opensearch_sql/utils/task_result_formatter.py` - 移除verbose控制
+- `opensearch_sql/utils/loguru_config.py` - 添加verbose参数支持
+- `opensearch_sql/main.py` - 传递verbose参数
 - `CLAUDE.md` - 添加文件组织规范和WORK_LOG.md更新机制
 - 移动13个测试文件到`tests/`目录
 - 移动文档文件到`docs/`目录
@@ -59,15 +59,15 @@ OpenSearch-SQL是一个Text-to-SQL框架，在BIRD基准测试中获得第一名
 **详情**:
 
 - 完全从Python标准logging迁移到loguru
-- 创建统一的loguru配置系统 (`src_optimized/utils/loguru_config.py`)
+- 创建统一的loguru配置系统 (`opensearch_sql/utils/loguru_config.py`)
 - 支持结构化日志、日志轮转、压缩、多级别输出
 - 更新了23+个pipeline节点文件
 - 保持了向后兼容性，现有Logger类接口仍可用
 
 **关键文件**:
 
-- `src_optimized/utils/loguru_config.py` - 统一日志配置
-- `src_optimized/core/logger.py` - 增强的Logger类，兼容loguru
+- `opensearch_sql/utils/loguru_config.py` - 统一日志配置
+- `opensearch_sql/core/logger.py` - 增强的Logger类，兼容loguru
 - `requirements.txt` - 添加loguru依赖
 
 #### 2. 数据持久化系统
@@ -84,8 +84,8 @@ OpenSearch-SQL是一个Text-to-SQL框架，在BIRD基准测试中获得第一名
 
 **关键文件**:
 
-- `src_optimized/utils/results_collector.py` - 结果收集器
-- `src_optimized/runner/run_manager.py` - 集成数据持久化功能
+- `opensearch_sql/utils/results_collector.py` - 结果收集器
+- `opensearch_sql/runner/run_manager.py` - 集成数据持久化功能
 
 #### 3. 目录结构简化
 
@@ -168,7 +168,7 @@ enable_multiprocessing=true  # 启用多进程
 ### 目录结构
 
 ```text
-src_optimized/
+opensearch_sql/
 ├── core/           # 核心组件 (Task, Logger, DatabaseManager等)
 ├── pipeline/       # 管道节点和工作流构建器
 ├── runner/         # 任务运行管理

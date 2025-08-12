@@ -5,7 +5,7 @@ Can run as standalone service or integrated component.
 
 import json
 import hashlib
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 import threading
 import numpy as np
 from typing import List, Dict, Any, Optional, Union
@@ -17,7 +17,7 @@ import gzip
 from pathlib import Path
 
 from .model_pool import model_pool_manager, initialize_model_pool
-from ..cache.cache_manager import CacheManager
+from opensearch_sql.cache.cache_manager import CacheManager
 
 logger = get_logger(__name__)
 

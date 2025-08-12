@@ -1,7 +1,7 @@
 """
 Standalone WorkflowBuilder implementation for OpenSearch-SQL pipeline.
 """
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 from typing import Dict, TypedDict, Callable
 from langgraph.graph import END, StateGraph
 

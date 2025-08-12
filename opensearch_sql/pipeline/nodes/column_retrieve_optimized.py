@@ -3,7 +3,7 @@ Optimized column retrieval pipeline node using embedding service.
 Demonstrates how to integrate the new architecture.
 """
 
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 import json
 from typing import Any, Dict, List
 from pathlib import Path
@@ -23,8 +23,8 @@ from runner.column_update import ColumnUpdater
 from database_process.make_emb import load_emb
 
 # Import optimized services
-from ..services.embedding_service import get_embedding_service
-from ..services.model_pool import initialize_model_pool
+from opensearch_sql.services.embedding_service import get_embedding_service
+from opensearch_sql.services.model_pool import initialize_model_pool
 
 logger = get_logger(__name__)
 

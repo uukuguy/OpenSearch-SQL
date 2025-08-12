@@ -6,7 +6,7 @@ import sys
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
 from collections import deque
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 
 logger = get_logger(__name__)
 

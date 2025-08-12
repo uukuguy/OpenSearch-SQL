@@ -6,7 +6,7 @@ Implements multiple execution strategies: multiprocessing, threading, and async.
 import os
 import json
 import time
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 import asyncio
 from pathlib import Path
 from typing import List, Dict, Any, Tuple, Optional
@@ -17,12 +17,12 @@ from threading import Lock
 import queue
 
 # Import from standalone implementation
-from ..core import Logger, Task, DatabaseManager, StatisticsManager, PipelineManager
-from ..pipeline import build_pipeline
+from opensearch_sql.core import Logger, Task, DatabaseManager, StatisticsManager, PipelineManager
+from opensearch_sql.pipeline import build_pipeline
 
 # Import optimized services
-from ..services.model_pool import initialize_model_pool, model_pool_manager
-from ..services.embedding_service import get_embedding_service
+from opensearch_sql.services.model_pool import initialize_model_pool, model_pool_manager
+from opensearch_sql.services.embedding_service import get_embedding_service
 
 logger = get_logger(__name__)
 

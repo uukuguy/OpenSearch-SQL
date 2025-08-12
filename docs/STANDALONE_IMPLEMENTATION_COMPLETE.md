@@ -34,7 +34,7 @@ bash run/run_standalone.sh
 
 ### 完全独立的目录结构
 ```
-src_optimized/                    # 完全独立实现
+opensearch_sql/                    # 完全独立实现
 ├── core/                         # 核心组件（独立实现）
 │   ├── task.py                   # ✅ 独立的Task类
 │   ├── database_manager.py       # ✅ 独立的数据库管理
@@ -66,7 +66,7 @@ src_optimized/                    # 完全独立实现
 │   ├── config_helper.py          # ✅ 配置管理
 │   ├── data_helper.py            # ✅ 数据处理
 │   └── performance_helper.py     # ✅ 性能监控
-├── main_standalone.py            # ✅ 独立主程序
+├── main.py            # ✅ 独立主程序
 └── __init__.py                   # ✅ 包初始化
 ```
 
@@ -78,7 +78,7 @@ src_optimized/                    # 完全独立实现
 bash run/run_standalone.sh
 
 # 或直接运行
-python -m src_optimized.main_standalone \
+python -m opensearch_sql.main \
     --data_mode dev \
     --db_root_path Bird
 ```
@@ -86,10 +86,10 @@ python -m src_optimized.main_standalone \
 ### 2. **程序化使用**
 ```python
 # 导入完全独立的组件
-from src_optimized.core import Task, DatabaseManager
-from src_optimized.pipeline import build_pipeline
-from src_optimized.llm import ModelFactory
-from src_optimized.runner import RunManager
+from opensearch_sql.core import Task, DatabaseManager
+from opensearch_sql.pipeline import build_pipeline
+from opensearch_sql.llm import ModelFactory
+from opensearch_sql.runner import RunManager
 
 # 创建和运行任务
 task = Task({"question_id": 1, "question": "test", "db_id": "test_db"})
@@ -120,12 +120,12 @@ manager.run_tasks()
 
 | 组件 | 原始实现 | 独立实现 | 状态 |
 |-----|---------|---------|------|
-| Task | `src/runner/task.py` | `src_optimized/core/task.py` | ✅ 独立 |
-| DatabaseManager | `src/runner/database_manager.py` | `src_optimized/core/database_manager.py` | ✅ 独立 |
-| Logger | `src/runner/logger.py` | `src_optimized/core/logger.py` | ✅ 独立 |
-| Pipeline Nodes | `src/pipeline/*.py` | `src_optimized/pipeline/nodes/*.py` | ✅ 独立 |
-| RunManager | `src/runner/run_manager.py` | `src_optimized/runner/run_manager.py` | ✅ 独立 |
-| WorkflowBuilder | `src/pipeline/workflow_builder.py` | `src_optimized/pipeline/workflow_builder.py` | ✅ 独立 |
+| Task | `src/runner/task.py` | `opensearch_sql/core/task.py` | ✅ 独立 |
+| DatabaseManager | `src/runner/database_manager.py` | `opensearch_sql/core/database_manager.py` | ✅ 独立 |
+| Logger | `src/runner/logger.py` | `opensearch_sql/core/logger.py` | ✅ 独立 |
+| Pipeline Nodes | `src/pipeline/*.py` | `opensearch_sql/pipeline/nodes/*.py` | ✅ 独立 |
+| RunManager | `src/runner/run_manager.py` | `opensearch_sql/runner/run_manager.py` | ✅ 独立 |
+| WorkflowBuilder | `src/pipeline/workflow_builder.py` | `opensearch_sql/pipeline/workflow_builder.py` | ✅ 独立 |
 
 ## 🎯 关键特性验证
 
@@ -133,7 +133,7 @@ manager.run_tasks()
 ```python
 # 测试证明：无任何对原始src/的依赖
 import sys
-loaded_modules = [m for m in sys.modules.keys() if 'src.' in m and 'src_optimized' not in m]
+loaded_modules = [m for m in sys.modules.keys() if 'src.' in m and 'opensearch_sql' not in m]
 assert len(loaded_modules) == 0  # ✅ 通过
 ```
 

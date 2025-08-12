@@ -2,7 +2,7 @@
 Performance monitoring and profiling utilities for OpenSearch-SQL pipeline.
 """
 import time
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 import functools
 import psutil
 import os

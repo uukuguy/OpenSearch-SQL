@@ -6,8 +6,8 @@ from threading import Lock
 from pathlib import Path
 from typing import Any, List, Dict, Union
 
-from ..utils.loguru_config import get_logger, LoguruConfig
-from ..utils.progress_tracker import ErrorFilter, SQLFormatter
+from opensearch_sql.utils.loguru_config import get_logger, LoguruConfig
+from opensearch_sql.utils.progress_tracker import ErrorFilter, SQLFormatter
 
 
 def make_serial(obj):

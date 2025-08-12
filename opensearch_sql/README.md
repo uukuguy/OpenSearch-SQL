@@ -15,7 +15,7 @@ A complete, standalone implementation of the OpenSearch-SQL Text-to-SQL pipeline
 ## Architecture
 
 ```
-src_optimized/
+opensearch_sql/
 ├── core/                          # Core components
 │   ├── task.py                   # Task representation
 │   ├── database_manager.py       # Database operations
@@ -65,7 +65,7 @@ export OPENAI_BASE_URL="https://api.openai.com/v1"  # Optional
 ### Basic Usage
 
 ```bash
-python -m src_optimized.main \
+python -m opensearch_sql.main \
     --data_mode dev \
     --db_root_path ./Bird \
     --pipeline_nodes "generate_db_schema+extract_col_value+candidate_generate+vote+evaluation" \
@@ -75,7 +75,7 @@ python -m src_optimized.main \
 ### Full Pipeline
 
 ```bash
-python -m src_optimized.main \
+python -m opensearch_sql.main \
     --data_mode dev \
     --db_root_path ./Bird \
     --pipeline_nodes "generate_db_schema+extract_col_value+extract_query_noun+column_retrieve_and_other_info+candidate_generate+align_correct+vote+evaluation" \
@@ -96,7 +96,7 @@ python -m src_optimized.main \
 ### Using Mock Model (for testing)
 
 ```bash
-python -m src_optimized.main \
+python -m opensearch_sql.main \
     --data_mode dev \
     --db_root_path ./Bird \
     --pipeline_nodes "candidate_generate+vote+evaluation" \
@@ -157,7 +157,7 @@ The `pipeline_setup` parameter is a JSON string containing configuration for eac
 Resume execution from intermediate stages:
 
 ```bash
-python -m src_optimized.main \
+python -m opensearch_sql.main \
     --data_mode dev \
     --db_root_path ./Bird \
     --pipeline_nodes "candidate_generate+vote+evaluation" \
@@ -220,8 +220,8 @@ results/{data_mode}/{pipeline_nodes}/{dataset_name}/{timestamp}/
 ## Programmatic Usage
 
 ```python
-from src_optimized.runner import RunManager
-from src_optimized.utils import load_bird_dataset
+from opensearch_sql.runner import RunManager
+from opensearch_sql.utils import load_bird_dataset
 import json
 
 # Load dataset

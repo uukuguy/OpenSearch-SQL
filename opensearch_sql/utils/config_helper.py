@@ -2,7 +2,7 @@
 Configuration helper utilities for OpenSearch-SQL pipeline.
 """
 import json
-from ..utils.loguru_config import get_logger
+from opensearch_sql.utils.loguru_config import get_logger
 from pathlib import Path
 from typing import Dict, Any, Optional
 
