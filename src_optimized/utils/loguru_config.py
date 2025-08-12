@@ -16,6 +16,21 @@ class LoguruConfig:
     
     _configured = False
     _log_directory = None
+    _error_patterns_to_suppress = [
+        # SQL syntax errors during generation
+        "syntax error",
+        "parse error", 
+        "unexpected token",
+        # Schema exploration errors
+        "column .* does not exist",
+        "table .* does not exist",
+        "no such column",
+        "no such table",
+        # SQL construction errors
+        "ambiguous column",
+        "aggregate function",
+        "group by clause",
+    ]
     
     @classmethod
     def setup(cls, 
@@ -26,7 +41,8 @@ class LoguruConfig:
               rotation: str = "10 MB",
               retention: str = "7 days",
               compression: str = "zip",
-              colorize: bool = True) -> None:
+              colorize: bool = True,
+              verbose: bool = False) -> None:
         """
         Configure loguru with optimized settings for OpenSearch-SQL pipeline.
         
@@ -39,6 +55,7 @@ class LoguruConfig:
             retention: How long to keep logs
             compression: Compression method for rotated logs
             colorize: Whether to colorize console output
+            verbose: Verbose mode for detailed pipeline node logging
         """
         if cls._configured:
             return
@@ -46,7 +63,7 @@ class LoguruConfig:
         # Remove default handler
         logger.remove()
         
-        # Setup console logging
+        # Setup console logging with filtering
         if log_to_console:
             console_format = (
                 "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
@@ -55,6 +72,51 @@ class LoguruConfig:
                 "<level>{message}</level>"
             )
             
+            # Add filter function for console output
+            def console_filter(record):
+                """Filter console output based on verbose mode and content type."""
+                message = record["message"].lower()
+                module_name = record["name"]
+                level = record["level"].name
+                
+                # Always show critical errors and warnings
+                if level in ["ERROR", "CRITICAL"]:
+                    return True
+                    
+                # In verbose mode, show everything except suppressed patterns
+                if verbose:
+                    # Still filter out expected SQL generation errors
+                    for pattern in cls._error_patterns_to_suppress:
+                        if pattern in message:
+                            return False
+                    return True
+                
+                # In non-verbose mode, apply stricter filtering
+                # Always show final node results
+                if any(node in module_name for node in ["vote", "evaluation", "task_result_formatter"]):
+                    return True
+                    
+                # Show important pipeline progress info
+                if any(keyword in message for keyword in [
+                    "processing task:", "task completed:", "pipeline built", 
+                    "total number of tasks", "running", "tasks", "finished"
+                ]):
+                    return True
+                
+                # Filter out routine pipeline node logs
+                if any(node in module_name for node in [
+                    "generate_db_schema", "extract_col_value", "extract_query_noun",
+                    "column_retrieve_and_other_info", "candidate_generate", "align_correct"
+                ]):
+                    return level in ["WARNING", "ERROR"]
+                
+                # Filter expected SQL generation errors
+                for pattern in cls._error_patterns_to_suppress:
+                    if pattern in message:
+                        return False
+                
+                return True
+            
             logger.add(
                 sys.stdout,
                 format=console_format,
@@ -62,7 +124,8 @@ class LoguruConfig:
                 colorize=colorize,
                 backtrace=True,
                 diagnose=True,
-                catch=True
+                catch=True,
+                filter=console_filter
             )
         
         # Setup file logging
@@ -134,106 +197,38 @@ class LoguruConfig:
         if name:
             return logger.bind(name=name)
         return logger
-    
-    @classmethod
-    def create_node_logger(cls, node_name: str):
-        """
-        Create a specialized logger for pipeline nodes.
-        
-        Args:
-            node_name: Name of the pipeline node
-            
-        Returns:
-            Logger configured for the specific node
-        """
-        return cls.get_logger(f"node.{node_name}")
-    
-    @classmethod
-    def create_service_logger(cls, service_name: str):
-        """
-        Create a specialized logger for services.
-        
-        Args:
-            service_name: Name of the service
-            
-        Returns:
-            Logger configured for the specific service
-        """
-        return cls.get_logger(f"service.{service_name}")
-    
-    @classmethod
-    def create_performance_logger(cls):
-        """
-        Create a specialized logger for performance metrics.
-        
-        Returns:
-            Logger configured for performance logging
-        """
-        if not cls._configured:
-            cls.setup()
-            
-        if cls._log_directory:
-            perf_log_file = cls._log_directory / "performance.log"
-            
-            # Add performance-specific handler
-            logger.add(
-                str(perf_log_file),
-                format="{time:YYYY-MM-DD HH:mm:ss.SSS} | PERF | {message}",
-                level="INFO",
-                rotation="50 MB",
-                retention="30 days",
-                compression="zip",
-                filter=lambda record: "PERF" in record.get("extra", {}),
-                enqueue=True
-            )
-        
-        return logger.bind(PERF=True)
-    
-    @classmethod
-    def log_performance_metric(cls, metric_name: str, value: Any, unit: str = "", extra_data: Dict = None):
-        """
-        Log performance metrics in a structured format.
-        
-        Args:
-            metric_name: Name of the metric
-            value: Metric value
-            unit: Unit of measurement
-            extra_data: Additional context data
-        """
-        perf_logger = cls.create_performance_logger()
-        extra_info = f" ({extra_data})" if extra_data else ""
-        perf_logger.info(f"{metric_name}: {value}{unit}{extra_info}")
-    
-    @classmethod
-    def get_log_directory(cls) -> Optional[Path]:
-        """Get the configured log directory."""
-        return cls._log_directory
-    
-    @classmethod
-    def reset_configuration(cls):
-        """Reset the configuration (mainly for testing)."""
-        cls._configured = False
-        cls._log_directory = None
-        logger.remove()
 
 
-# Convenience functions for easy import
+# Convenience functions for backward compatibility
+def setup_logging(log_level: str = "INFO", 
+                 log_directory: Optional[str] = None,
+                 verbose: bool = False,
+                 **kwargs) -> None:
+    """
+    Convenience function to setup logging via LoguruConfig.
+    
+    Args:
+        log_level: Logging level 
+        log_directory: Directory for log files
+        verbose: Verbose mode for detailed logging
+        **kwargs: Additional arguments passed to LoguruConfig.setup()
+    """
+    LoguruConfig.setup(
+        log_level=log_level,
+        log_directory=log_directory,
+        verbose=verbose,
+        **kwargs
+    )
+
+
 def get_logger(name: str = None):
-    """Get a configured logger instance."""
+    """
+    Convenience function to get a logger instance.
+    
+    Args:
+        name: Logger name for identification
+        
+    Returns:
+        Configured logger instance
+    """
     return LoguruConfig.get_logger(name)
-
-
-def setup_logging(log_level: str = "INFO", **kwargs):
-    """Setup loguru with specified configuration."""
-    LoguruConfig.setup(log_level=log_level, **kwargs)
-
-
-def log_performance(metric_name: str, value: Any, unit: str = "", **extra):
-    """Log a performance metric."""
-    LoguruConfig.log_performance_metric(metric_name, value, unit, extra)
-
-
-# Create commonly used loggers
-pipeline_logger = lambda: LoguruConfig.get_logger("pipeline")
-service_logger = lambda name: LoguruConfig.create_service_logger(name)
-node_logger = lambda name: LoguruConfig.create_node_logger(name)

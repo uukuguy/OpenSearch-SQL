@@ -28,7 +28,7 @@ def column_retrieve_and_other_info(task: Any, execution_history: List[Dict[str, 
     try:
         # Get configuration
         config, node_name = PipelineManager().get_model_para()
-        paths = DatabaseManager()
+        db_manager = DatabaseManager()  # Database manager instance
         
         # Get previous results safely
         schema_result = get_last_node_result(execution_history, "generate_db_schema")
@@ -48,11 +48,11 @@ def column_retrieve_and_other_info(task: Any, execution_history: List[Dict[str, 
         )
         
         # Get foreign keys
-        foreign_keys = extract_foreign_keys(db_col_dic, paths)
+        foreign_keys = extract_foreign_keys(db_col_dic, db_manager)
         
         # Get column values for WHERE conditions
         l_values = extract_column_values(
-            task.question, task.evidence, db_col_dic, values_result, paths
+            task.question, task.evidence, db_col_dic, values_result, db_manager
         )
         
         # Generate query order information
@@ -271,28 +271,39 @@ def extract_foreign_keys(db_col_dic: Dict[str, Any], db_manager: DatabaseManager
     foreign_keys = []
     
     try:
-        # Get foreign key information from database
-        for table_name in db_col_dic.keys():
-            try:
-                fk_info = db_manager.execute_sql(f"PRAGMA foreign_key_list({table_name})")
-                for fk in fk_info:
-                    # fk structure: [id, seq, table, from, to, on_update, on_delete, match]
-                    if len(fk) >= 5:
-                        from_col = fk[3]
-                        to_table = fk[2] 
-                        to_col = fk[4]
-                        foreign_keys.append(f"{table_name}.{from_col} -> {to_table}.{to_col}")
-            except Exception as e:
-                # logger.warning(f"Could not get foreign keys for table {table_name}: {e}")
-                pass
-        
-        # If no foreign keys found, infer from column names
-        if not foreign_keys:
+        # Check if db_manager is actually a DatabaseManager instance
+        if not isinstance(db_manager, DatabaseManager):
+            logger.debug(f"db_manager type mismatch: expected DatabaseManager, got {type(db_manager)}")
+            # Try to infer foreign keys from column names instead
             foreign_keys = infer_foreign_keys_from_names(db_col_dic)
+        else:
+            # Get foreign key information from database
+            for table_name in db_col_dic.keys():
+                try:
+                    fk_info = db_manager.execute_sql(f"PRAGMA foreign_key_list({table_name})")
+                    if fk_info and isinstance(fk_info, list):
+                        for fk in fk_info:
+                            # fk structure: [id, seq, table, from, to, on_update, on_delete, match]
+                            if isinstance(fk, (list, tuple)) and len(fk) >= 5:
+                                from_col = fk[3]
+                                to_table = fk[2] 
+                                to_col = fk[4]
+                                foreign_keys.append(f"{table_name}.{from_col} -> {to_table}.{to_col}")
+                except Exception as e:
+                    # Skip tables that have issues  
+                    pass
+            
+            # If no foreign keys found, infer from column names
+            if not foreign_keys:
+                foreign_keys = infer_foreign_keys_from_names(db_col_dic)
     
     except Exception as e:
-        logger.warning(f"Error extracting foreign keys: {e}")
-        return "No foreign key information available."
+        logger.debug(f"Error in foreign key extraction: {e}, type of db_manager: {type(db_manager)}")
+        # Try to infer foreign keys as fallback
+        try:
+            foreign_keys = infer_foreign_keys_from_names(db_col_dic)
+        except:
+            return "No foreign key information available."
     
     if foreign_keys:
         return "Foreign Key Relationships:\n" + "\n".join(foreign_keys)

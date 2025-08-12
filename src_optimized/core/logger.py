@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, List, Dict, Union
 
 from ..utils.loguru_config import get_logger, LoguruConfig
+from ..utils.progress_tracker import ErrorFilter, SQLFormatter
 
 
 def make_serial(obj):
@@ -86,6 +87,8 @@ class Logger:
         self.question_id = question_id
         self.result_directory = Path(result_directory)
         self.logger = get_logger(f"pipeline.{db_id}.{question_id}")
+        self.error_filter = ErrorFilter()
+        self.sql_formatter = SQLFormatter()
 
     def _set_log_level(self, log_level: str):
         """
@@ -132,7 +135,12 @@ class Logger:
         with log_file_path.open("a", encoding='utf-8') as file:
             file.write(f"############################## {_from} at step {step} ##############################\n\n")
             if isinstance(text, str):
-                file.write(text)
+                # Special formatting for SQL strings
+                if _from.lower() in ["sql", "generated_sql", "candidate_sql", "vote", "final_sql"]:
+                    formatted_sql = self.sql_formatter.format_sql(text, max_length=500)
+                    file.write(formatted_sql)
+                else:
+                    file.write(text)
             elif isinstance(text, (list, dict)):
                 formatted_text = json.dumps(text, indent=4, ensure_ascii=False)
                 file.write(formatted_text)
@@ -154,15 +162,24 @@ class Logger:
         with file_path.open("w", encoding='utf-8') as file:
             json.dump(execution_history_tmp, file, indent=4, ensure_ascii=False)
 
-    def log_error(self, error: Exception, context: str = ""):
+    def log_error(self, error: Exception, context: str = "", node_type: str = ""):
         """
-        Logs an error with context information.
+        Logs an error with context information, filtering expected SQL errors.
         
         Args:
             error (Exception): The error to log.
             context (str): Additional context information.
+            node_type (str): Pipeline node where error occurred.
         """
-        error_message = f"Error in {context}: {type(error).__name__}: {str(error)}"
+        error_str = str(error)
+        
+        # Check if error should be logged based on filtering
+        if not self.error_filter.should_log_error(error_str, node_type):
+            # Log as debug instead of error for expected SQL generation errors
+            self.log(f"Expected error in {context}: {error_str[:100]}...", "debug")
+            return
+            
+        error_message = f"Error in {context}: {type(error).__name__}: {error_str}"
         self.log(error_message, "error")
 
     def log_debug(self, message: str, data: Any = None):
@@ -216,6 +233,17 @@ class Logger:
     def critical(self, message: str):
         """Standard logging interface - critical level."""
         self.log(message, "critical")
+    
+    def log_sql(self, sql: str, context: str = "Generated SQL"):
+        """
+        Logs SQL with special formatting.
+        
+        Args:
+            sql (str): SQL query to log.
+            context (str): Context for the SQL.
+        """
+        formatted_sql = self.sql_formatter.format_sql(sql)
+        self.log(f"{context}: {formatted_sql}", "info")
 
     def __str__(self) -> str:
         """String representation of the Logger."""

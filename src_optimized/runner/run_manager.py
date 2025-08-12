@@ -12,6 +12,8 @@ from datetime import datetime
 from ..core import Task, Logger, DatabaseManager, StatisticsManager, PipelineManager
 from ..pipeline import build_pipeline, validate_pipeline_nodes
 from ..utils.results_collector import ResultsCollector
+from ..utils.progress_tracker import ProgressTracker, SQLFormatter, ErrorFilter
+from ..utils.task_result_formatter import TaskResultLogger
 
 
 # Default values - will be overridden by args
@@ -43,6 +45,15 @@ class RunManager:
         
         # Initialize results collector
         self.results_collector = None
+        
+        # Get verbose mode from args (default to False)
+        self.verbose = getattr(args, 'verbose', False)
+        
+        # Initialize progress tracker and formatters
+        self.progress_tracker = None
+        self.sql_formatter = SQLFormatter()
+        self.error_filter = ErrorFilter()
+        self.result_logger = TaskResultLogger()  # 任务结果始终详细显示
         
         # Setup logging
         self._setup_logging()
@@ -123,6 +134,14 @@ class RunManager:
         self.results_collector = ResultsCollector(
             result_directory=self.result_directory,
             dataset_size=self.total_number_of_tasks
+        )
+        
+        # Initialize progress tracker with enhanced features
+        # Check if ground truth is available by looking for SQL field in tasks
+        has_ground_truth = any(hasattr(task, 'SQL') and task.SQL for task in self.tasks)
+        self.progress_tracker = ProgressTracker(
+            total_tasks=self.total_number_of_tasks,
+            has_ground_truth=has_ground_truth
         )
         
         logger.info(f"Total number of tasks: {self.total_number_of_tasks}")
@@ -373,33 +392,108 @@ class RunManager:
         """
         state, db_id, question_id, original_index, processing_time = log
         
+        # Extract task results for detailed display
+        generated_sql = ""
+        execution_status = "unknown"
+        evaluation_results = None
+        error_message = ""
+        
+        if state is not None and "keys" in state and "execution_history" in state["keys"]:
+            execution_history = state["keys"]["execution_history"]
+            
+            # Extract SQL
+            for step in reversed(execution_history):
+                if not isinstance(step, dict):
+                    continue
+                if step.get("node_type") == "vote" and "SQL" in step:
+                    generated_sql = step["SQL"]
+                    break
+                elif step.get("node_type") == "align_correct" and "SQL" in step:
+                    generated_sql = step["SQL"]
+                    break
+                elif step.get("node_type") == "candidate_generate" and "SQL" in step:
+                    sql_candidates = step["SQL"]
+                    if isinstance(sql_candidates, list) and sql_candidates:
+                        generated_sql = sql_candidates[0]
+                    elif isinstance(sql_candidates, str):
+                        generated_sql = sql_candidates
+                    break
+                    
+            # Extract evaluation results
+            for step in reversed(execution_history):
+                if not isinstance(step, dict):
+                    continue
+                if step.get("node_type") == "evaluation":
+                    evaluation_results = {k: v for k, v in step.items() if k not in ["node_type", "status"]}
+                    if step.get("exec_res") == 1:
+                        execution_status = "success"
+                    else:
+                        execution_status = "failed"
+                        error_message = step.get("error", "")
+                    break
+        
+        # Display detailed task result
+        task_id = f"{db_id}#{question_id}"
+        ground_truth_sql = getattr(task, 'SQL', "")
+        question_text = getattr(task, 'question', f"Question {question_id}")
+        
+        self.result_logger.log_task_result(
+            task_id=task_id,
+            question=question_text,
+            generated_sql=generated_sql,
+            ground_truth_sql=ground_truth_sql,
+            execution_status=execution_status,
+            evaluation_results=evaluation_results,
+            processing_time=processing_time,
+            error_message=error_message
+        )
+        
         # Collect result data
         self._collect_task_result(state, task, original_index, processing_time)
         
         if state is None:
-            logger.warning(f"Task {question_id} completed with no result")
             self.processed_tasks += 1
-            self.plot_progress()
             return
 
-        try:
-            execution_history = state["keys"]['execution_history']
+        # Update statistics if we have valid state and execution history
+        if state is not None and "keys" in state and "execution_history" in state["keys"]:
+            try:
+                execution_history = state["keys"]['execution_history']
+                
+                # Update statistics from evaluation result
+                if execution_history:
+                    evaluation_result = execution_history[-1]
+                    # Check if evaluation_result is a dictionary before calling .get()
+                    if isinstance(evaluation_result, dict) and evaluation_result.get("node_type") == "evaluation":
+                        for evaluation_for, result in evaluation_result.items():
+                            if evaluation_for in ['node_type', 'status']:
+                                continue
+                            self.statistics_manager.update_stats(db_id, question_id, evaluation_for, result)
+                        self.statistics_manager.dump_statistics_to_file()
             
-            # Update statistics from evaluation result
-            if execution_history:
-                evaluation_result = execution_history[-1]
-                if evaluation_result.get("node_type") == "evaluation":
-                    for evaluation_for, result in evaluation_result.items():
-                        if evaluation_for in ['node_type', 'status']:
-                            continue
-                        self.statistics_manager.update_stats(db_id, question_id, evaluation_for, result)
-                    self.statistics_manager.dump_statistics_to_file()
-        
-        except Exception as e:
-            logger.error(f"Error processing task result for {question_id}: {e}")
+            except Exception as e:
+                # Only log unexpected errors
+                if not self.error_filter.is_expected_error(str(e)):
+                    logger.error(f"Error processing task result for {question_id}: {e}")
         
         self.processed_tasks += 1
-        self.plot_progress()
+        
+        # Update enhanced progress tracker
+        if self.progress_tracker:
+            # Extract more detailed information for progress tracking
+            is_exact_match = False
+            if evaluation_results and "exec_res" in evaluation_results:
+                is_exact_match = (evaluation_results["exec_res"] == 1)
+            elif evaluation_results and "execution_match" in evaluation_results:
+                is_exact_match = evaluation_results["execution_match"]
+                
+            self.progress_tracker.update(
+                task_id=task_id,
+                generated_sql=generated_sql,
+                execution_status=execution_status,
+                is_exact_match=is_exact_match,
+                error_message=error_message
+            )
         
         # Save results periodically
         if self.processed_tasks % 10 == 0 or self.processed_tasks == self.total_number_of_tasks:
@@ -435,6 +529,8 @@ class RunManager:
                     
                     # Look for the final SQL in voting node result
                     for step in reversed(execution_history):
+                        if not isinstance(step, dict):
+                            continue
                         if step.get("node_type") == "vote" and "SQL" in step:
                             generated_sql = step["SQL"]
                             break
@@ -451,6 +547,8 @@ class RunManager:
                     
                     # Extract evaluation results
                     for step in reversed(execution_history):
+                        if not isinstance(step, dict):
+                            continue
                         if step.get("node_type") == "evaluation":
                             evaluation_results = {k: v for k, v in step.items() if k != "node_type"}
                             if step.get("exec_res") == 1:
@@ -653,6 +751,10 @@ class RunManager:
     def cleanup(self):
         """Cleanup resources."""
         try:
+            # Display final progress summary
+            if self.progress_tracker:
+                self.progress_tracker.finish()
+            
             # Print final statistics
             self.statistics_manager.print_summary()
             

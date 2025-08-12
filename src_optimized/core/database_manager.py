@@ -168,7 +168,7 @@ class DatabaseManager:
                 else:
                     raise ValueError("Invalid fetch argument. Must be 'all', 'one', 'random', or an integer.")
         except Exception as e:
-            logger.error(f"Error in execute_sql: {e}\nSQL: {sql}")
+            # logger.error(f"Error in execute_sql: {e}\nSQL: {sql}")
             raise e
 
     def _compare_sqls_outcomes(self, predicted_sql: str, ground_truth_sql: str) -> int:
@@ -233,7 +233,7 @@ class DatabaseManager:
             result = self.execute_sql(sql, fetch=max_returned_rows)
             return {"SQL": sql, "RESULT": result, "STATUS": "OK"}
         except Exception as e:
-            logger.error(f"Error in validate_sql_query: {e}")
+            # logger.error(f"Error in validate_sql_query: {e}")
             return {"SQL": sql, "RESULT": str(e), "STATUS": "ERROR"}
 
     def aggregate_sqls(self, sqls: List[str]) -> str:

@@ -6,7 +6,51 @@ OpenSearch-SQL是一个Text-to-SQL框架，在BIRD基准测试中获得第一名
 
 ## 最新完成的重大工作
 
-### 2025-08-12 会话记录
+### 2025-08-12 会话记录 - 日志优化与文件组织
+
+#### 最新完成工作 (当前会话)
+
+**状态**: ✅ 已完成  
+**时间**: 2025-08-12 09:00 - 09:30
+
+**主要成果**:
+
+1. **日志输出密度优化**
+   - 实现任务结果始终详细显示（重要信息不受verbose控制）
+   - 管道运行日志通过verbose参数智能控制
+   - 创建智能过滤系统，默认模式过滤中间节点日志，保留关键信息
+   - 详细模式显示完整管道处理过程
+
+2. **文件组织规范化**
+   - 建立`docs/`目录存放所有工作记录文档
+   - 建立`tests/`目录存放所有临时测试代码
+   - 移动13个测试文件到`tests/`目录
+   - 移动11个文档文件到`docs/`目录
+   - 确保`CLAUDE.md`控制文件保持在根目录
+
+3. **WORK_LOG.md自动更新机制**
+   - 在CLAUDE.md中明确定义了自动更新触发条件
+   - 设定4类更新时机：重大功能完成、测试验证、会话结束、问题解决
+   - 规范了更新内容要求：会话概述、技术变更、测试结果、遗留问题、下步计划
+
+**技术实现**:
+- 修改`TaskResultFormatter`确保任务结果始终详细显示
+- 更新`LoguruConfig`支持verbose模式的管道日志过滤
+- 在`main_standalone.py`中传递verbose参数到日志配置
+- 创建智能控制台过滤器，基于模块名和消息内容过滤
+
+**测试验证**:
+- `test_final_verbose_behavior.py` - 验证verbose模式行为
+- 确认任务结果完整显示：问题、SQL、评估、结果对比
+- 确认管道日志可控制：默认简洁，verbose详细
+
+**文件变更**:
+- `src_optimized/utils/task_result_formatter.py` - 移除verbose控制
+- `src_optimized/utils/loguru_config.py` - 添加verbose参数支持
+- `src_optimized/main_standalone.py` - 传递verbose参数
+- `CLAUDE.md` - 添加文件组织规范和WORK_LOG.md更新机制
+- 移动13个测试文件到`tests/`目录
+- 移动文档文件到`docs/`目录
 
 #### 1. 日志系统迁移 (loguru)
 

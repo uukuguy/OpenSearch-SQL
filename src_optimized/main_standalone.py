@@ -64,7 +64,10 @@ def main(args):
         args: Command line arguments
     """
     # Setup logging first
-    setup_logging(log_level=getattr(args, 'log_level', 'INFO'))
+    setup_logging(
+        log_level=getattr(args, 'log_level', 'INFO'),
+        verbose=getattr(args, 'verbose', False)
+    )
     logger = get_logger("main")
     
     logger.info("=" * 60)

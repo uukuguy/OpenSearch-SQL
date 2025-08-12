@@ -84,19 +84,18 @@ Configure your API key in `run/run_main.sh`:
 
 3. **LLM Integration** (`src_optimized/llm/`):
    - **Model Abstraction** (`model.py`): Supports multiple LLM providers (OpenAI, Claude, Gemini, Dashscope)
-   - **Prompt Management** (`prompts.py`, `all_prompt.py`): Centralized prompt templates
-   - **Database Conclusion** (`db_conclusion.py`): Schema reasoning logic
+   - **Prompt Management** (`prompts.py`): Centralized prompt templates
 
 4. **Runner System** (`src_optimized/runner/`):
    - **Database Manager** (`database_manager.py`): Database connection and query execution
    - **Task Management** (`task.py`): Individual task representation and execution
    - **Statistics Manager** (`statistics_manager.py`): Performance tracking and metrics
-   - **Logger** (`logger.py`): Enhanced logger with loguru integration and backward compatibility
 
 5. **Utilities** (`src_optimized/utils/`):
    - **Loguru Configuration** (`loguru_config.py`): Unified logging system with structured output, rotation, and compression
    - **Results Collector** (`results_collector.py`): Thread-safe data persistence maintaining dataset order
-   - **Configuration Helpers**: Performance optimization and caching utilities
+   - **Progress Tracker** (`progress_tracker.py`): Enhanced progress display with ETA and accuracy tracking
+   - **Task Result Formatter** (`task_result_formatter.py`): Detailed task completion display
 
 ### Configuration
 
@@ -106,20 +105,7 @@ Pipeline behavior is controlled through JSON configuration in `run/run_main.sh`:
 - **Model Paths**: BERT model paths for embeddings (`bge-m3` by default)
 - **Alignment Methods**: Configurable alignment strategies
 - **Batch Processing**: Start/end indices for processing subsets
-
-### Data Processing
-
-1. **Database Preprocessing** (`src/database_process/`):
-   - `data_preprocess.py`: Processes BIRD dataset files
-   - `generate_question.py`: Creates few-shot examples using DAIL-SQL method
-   - `make_emb.py`: Generates embeddings for schema linking
-   - `prepare_train_queries.py`: Prepares training queries
-
-2. **Expected Data Structure**:
-   - Dataset root: `Bird/` directory
-   - JSON files: `dev/dev.json`, `train/train.json`
-   - Database files: `dev/dev_databases/`
-   - Few-shot data: `Bird/fewshot/questions.json`
+- **Verbose Mode**: Control logging detail level with `verbose` parameter
 
 ### Key Features
 
@@ -129,12 +115,14 @@ Pipeline behavior is controlled through JSON configuration in `run/run_main.sh`:
 - **Beam Search**: Generates multiple candidates (n=21) with voting mechanism
 - **Schema Linking**: Uses BERT embeddings for column retrieval
 - **Checkpointing**: Supports resuming from intermediate pipeline stages
+- **Enhanced Progress Tracking**: Real-time progress with ETA, accuracy rates, and processing speed
+- **Intelligent Log Filtering**: Verbose mode controls pipeline node logging, task results always detailed
 
 ### Important Paths and Configuration
 
 - **Results Directory**: `results/{dataset_name}/{YYYY-MM-DD_HH-MM-SS}/` (simplified 3-layer structure)
 - **Log Directory**: `results/.../logs/` with loguru structured logging
-- **Work Log**: `WORK_LOG.md` for session continuity and development history
+- **Documentation**: `docs/WORK_LOG.md` for session continuity and development history
 - **Configuration**: Pipeline setup is passed as JSON string in shell scripts
 - **API Keys**: Set in `run/run_main.sh` (AK variable for API authentication)
 - **Model Paths**: Update `bert_model_path` variable for local embeddings model
@@ -146,6 +134,8 @@ Pipeline behavior is controlled through JSON configuration in `run/run_main.sh`:
 - ✅ **Multiprocessing Support**: Fixed pickle serialization issues for parallel task execution
 - ✅ **Test Set Compatibility**: Automatic handling of datasets with/without ground truth SQL
 - ✅ **Directory Simplification**: User-friendly 3-layer result structure
+- ✅ **Enhanced Progress Display**: Progress bar with ETA, accuracy tracking, and detailed task results
+- ✅ **Log Density Optimization**: Intelligent filtering with verbose mode control
 
 ### Execution Flow
 
@@ -160,26 +150,85 @@ Pipeline behavior is controlled through JSON configuration in `run/run_main.sh`:
 9. Persist results in multiple formats (JSON, CSV) while maintaining dataset order
 10. Generate comprehensive logs and statistics
 
-## Work Log Requirements
+## File Organization Standards
 
-**IMPORTANT**: When working on this repository, always maintain the work log (`WORK_LOG.md`) to ensure session continuity. The work log should include:
+**IMPORTANT**: All newly created documentation and test files must follow these organization standards:
 
-### Required Log Entries
+### Directory Structure Requirements
 
-- **Session Date and Overview**: Brief summary of work performed
-- **Major Changes**: List of significant modifications with file paths
-- **System Status Updates**: Current functionality and known issues
-- **Configuration Changes**: Any updates to settings, paths, or parameters
-- **Testing Results**: Verification of new features and bug fixes
-- **Next Steps**: Suggestions for future development
+#### 📁 **docs/** Directory
+- All work documentation (`.md` files) must be placed in the `docs/` directory
+- Including but not limited to:
+  - `WORK_LOG.md` - Work log (required)
+  - Technical implementation documents
+  - Architecture design documents
+  - Performance optimization records
+  - Problem resolution summaries
 
-### Log Update Triggers
+**Note**: `CLAUDE.md` is a control file and must remain in the **root directory**
 
-- After completing major features or bug fixes
-- When modifying core system components
-- After testing and validation phases
-- Before ending development sessions
-- When encountering and resolving significant issues
+#### 🧪 **tests/** Directory
+- All temporary test code files must be placed in the `tests/` directory
+- Including but not limited to:
+  - Feature validation test files
+  - Performance test scripts
+  - Integration test code
+  - Demo and example code
+
+### File Naming and Language Standards
+
+#### Documentation Files (`docs/` directory)
+- **Naming**: Use UPPERCASE_WITH_UNDERSCORES, e.g., `IMPLEMENTATION_GUIDE.md`
+- **Language**: **All documentation files in `docs/` directory MUST be written in Chinese (中文)**
+- **Purpose**: Chinese documentation ensures better readability for the development team and maintains consistency in project documentation
+
+#### Test Files (`tests/` directory)
+- **Naming**: Use `test_` prefix, e.g., `test_feature_validation.py`
+- **Language**: Code and comments can use English as standard programming practice
+
+## Work Log Management
+
+**IMPORTANT**: The work log (`docs/WORK_LOG.md`) must be maintained to ensure session continuity and development history.
+
+### Automatic Update Triggers
+
+Claude should automatically update `docs/WORK_LOG.md` when:
+
+1. **Major Feature Implementation Completed**
+   - New feature development finished
+   - Important bugs fixed
+   - System architecture adjustments made
+
+2. **After Testing and Validation Phases**
+   - Feature testing completed
+   - Performance validation finished
+   - Integration testing passed
+
+3. **Before Session Ends**
+   - Must update before each development session ends
+   - Record current progress and status
+   - Provide continuation points for next session
+
+4. **After Problem Resolution**
+   - Technical challenges resolved
+   - System errors handled
+   - Performance issues optimized
+
+### Update Execution Timing
+
+Claude should proactively update `docs/WORK_LOG.md` at these specific times:
+- Immediately after completing important tasks
+- Before user introduces new requirements (update current progress first)
+- When sessions are about to end (proactively ask if log update is needed)
+- When encountering key decision points (record decision process)
+
+### Required Update Content
+
+- **Session Overview**: Main work content and achievements
+- **Technical Changes**: Specific code modifications with file paths
+- **Test Results**: Verification processes and outcomes
+- **Outstanding Issues**: Unresolved problems and temporary solutions
+- **Next Steps**: Subsequent development recommendations and priorities
 
 ### Log Format Standards
 
